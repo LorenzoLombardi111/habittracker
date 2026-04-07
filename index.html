@@ -86,7 +86,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);border-right:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;overflow:hidden;transition:transform .25s ease}
 .sidebar-inner{flex:1;overflow-y:auto;padding:16px}
 .sidebar-heading{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text)}
-.btn-dashboard{width:100%;padding:10px 12px;background:var(--surface);border:2px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;margin-bottom:10px;transition:background .15s,border-color .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-dashboard{width:100%;padding:10px 12px;background:var(--surface);border:2px solid var(--accent);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;margin-top:14px;margin-bottom:10px;transition:background .15s,border-color .15s;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn-dashboard:hover{background:var(--bg);border-color:var(--text-secondary)}
 .btn-dashboard.active{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb, var(--accent) 8%, var(--surface))}
 .btn-dashboard svg{width:16px;height:16px;flex-shrink:0}
@@ -468,6 +468,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-inner">
       <div class="sidebar-heading">My Habits</div>
+
+      <div class="habit-list" id="habitList"></div>
+
       <button class="btn-dashboard" id="btnDashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</button>
       <button class="btn-new-habit" id="btnNewHabit">+ New Habit</button>
 
@@ -489,8 +492,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
           <button class="btn-cancel" id="btnCancelHabit">Cancel</button>
         </div>
       </div>
-
-      <div class="habit-list" id="habitList"></div>
 
       <div class="archived-section" id="archivedSection" style="display:none">
         <button class="archived-toggle" id="archivedToggle">
