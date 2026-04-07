@@ -53,11 +53,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .habit-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:background .15s,border-color .15s;position:relative}
 .habit-item:hover{background:var(--bg)}
 .habit-item.active{border-color:var(--accent);background:var(--bg)}
+.habit-drag-handle{cursor:grab;color:var(--text-secondary);font-size:13px;opacity:0;transition:opacity .15s;flex-shrink:0;padding:0 2px;user-select:none;line-height:1}
+.habit-item:hover .habit-drag-handle{opacity:.6}
+.habit-drag-handle:hover{opacity:1 !important}
+.habit-item.dragging{opacity:.4;background:var(--surface)}
+.habit-list .drag-over-top{border-top:2px solid var(--accent) !important}
+.habit-list .drag-over-bottom{border-bottom:2px solid var(--accent) !important}
 .habit-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
 .habit-name{font-size:13px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .habit-status{font-size:10px;color:var(--text-secondary);flex-shrink:0}
 .habit-menu-btn{background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:16px;padding:0 4px;line-height:1;opacity:0;transition:opacity .15s}
 .habit-item:hover .habit-menu-btn{opacity:1}
+
+/* INLINE EDIT FORM */
+.inline-edit-form{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.inline-edit-form .form-input{font-size:13px;padding:7px 9px}
+.inline-edit-form .color-picker{margin:4px 0}
+.inline-edit-form .freq-select{margin:4px 0}
+.inline-edit-form .form-actions{margin-top:4px}
 
 /* CONTEXT MENU */
 .ctx-menu{position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:4px;min-width:140px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.15)}
@@ -472,7 +485,13 @@ function renderSidebar(){
   const active = habits.filter(h => !h.archived);
   const archived = habits.filter(h => h.archived);
   list.innerHTML = '';
-  active.forEach(h => list.appendChild(makeHabitRow(h)));
+  active.forEach(h => {
+    if(inlineEditId === h.id){
+      list.appendChild(renderInlineEditForm(h));
+    } else {
+      list.appendChild(makeHabitRow(h));
+    }
+  });
   const sec = document.getElementById('archivedSection');
   sec.style.display = archived.length ? '' : 'none';
   const aList = document.getElementById('archivedList');
@@ -488,14 +507,75 @@ function renderSidebar(){
 function makeHabitRow(h, isArchived){
   const div = document.createElement('div');
   div.className = 'habit-item' + (h.id === selectedId ? ' active' : '');
-  div.innerHTML = `<span class="habit-dot" style="background:${h.color}"></span>
+  div.setAttribute('data-habit-id', h.id);
+  const dragHandle = isArchived ? '' : '<span class="habit-drag-handle" draggable="true">☰</span>';
+  div.innerHTML = `${dragHandle}<span class="habit-dot" style="background:${h.color}"></span>
     <span class="habit-name">${esc(h.name)}</span>
     <span class="habit-status">${h.paused ? 'paused' : ''}</span>
     <button class="habit-menu-btn">⋯</button>`;
-  div.onclick = (e) => { if(!e.target.closest('.habit-menu-btn')){ selectHabit(h.id) }};
+  div.onclick = (e) => { if(!e.target.closest('.habit-menu-btn') && !e.target.closest('.habit-drag-handle')){ selectHabit(h.id) }};
   div.oncontextmenu = (e) => { e.preventDefault(); showCtx(e, h) };
   div.querySelector('.habit-menu-btn').onclick = (e) => { e.stopPropagation(); showCtx(e, h) };
+  // Drag and drop (only for active habits)
+  if(!isArchived){
+    const handle = div.querySelector('.habit-drag-handle');
+    if(handle){
+      handle.ondragstart = (e) => {
+        e.stopPropagation();
+        dragHabitId = h.id;
+        div.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', h.id);
+      };
+      handle.ondragend = () => {
+        div.classList.remove('dragging');
+        dragHabitId = null;
+        clearDragIndicators();
+      };
+    }
+    div.ondragover = (e) => {
+      if(!dragHabitId || dragHabitId === h.id) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      clearDragIndicators();
+      const rect = div.getBoundingClientRect();
+      const mid = rect.top + rect.height / 2;
+      if(e.clientY < mid) div.classList.add('drag-over-top');
+      else div.classList.add('drag-over-bottom');
+    };
+    div.ondragleave = () => {
+      div.classList.remove('drag-over-top','drag-over-bottom');
+    };
+    div.ondrop = (e) => {
+      e.preventDefault();
+      if(!dragHabitId || dragHabitId === h.id) return;
+      clearDragIndicators();
+      const rect = div.getBoundingClientRect();
+      const mid = rect.top + rect.height / 2;
+      const before = e.clientY < mid;
+      reorderHabit(dragHabitId, h.id, before);
+      dragHabitId = null;
+    };
+  }
   return div;
+}
+let dragHabitId = null;
+
+function clearDragIndicators(){
+  document.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(el => {
+    el.classList.remove('drag-over-top','drag-over-bottom');
+  });
+}
+
+function reorderHabit(dragId, targetId, before){
+  const dragIdx = habits.findIndex(h => h.id === dragId);
+  if(dragIdx === -1) return;
+  const [moved] = habits.splice(dragIdx, 1);
+  let targetIdx = habits.findIndex(h => h.id === targetId);
+  if(!before) targetIdx++;
+  habits.splice(targetIdx, 0, moved);
+  save();
+  renderSidebar();
 }
 
 function selectHabit(id){
@@ -512,15 +592,33 @@ function showCtx(e, h){
   ctxMenu.style.display = 'block';
   ctxMenu.innerHTML = '';
   if(!h.archived){
-    addCtxBtn('Edit', () => openEdit(h));
+    addCtxBtn('Edit', () => openInlineEdit(h));
     addCtxBtn('Archive', () => { h.archived = true; save(); if(selectedId===h.id){ selectedId=null } renderSidebar(); renderDetail() });
   } else {
-    addCtxBtn('Restore', () => { h.archived = false; save(); renderSidebar(); renderDetail() });
+    addCtxBtn('Unarchive', () => { h.archived = false; save(); renderSidebar(); renderDetail() });
   }
-  addCtxBtn('Delete', () => { if(confirm('Delete "'+h.name+'"?')){ habits = habits.filter(x=>x.id!==h.id); save(); if(selectedId===h.id){selectedId=null} renderSidebar(); renderDetail() }}, true);
+  addCtxBtn('Delete', () => deleteHabit(h), true);
   let x = e.clientX, y = e.clientY;
   ctxMenu.style.left = Math.min(x, innerWidth - 160) + 'px';
   ctxMenu.style.top = Math.min(y, innerHeight - 120) + 'px';
+}
+
+function deleteHabit(h){
+  if(!confirm('Delete \'' + h.name + '\'? This removes all history. This cannot be undone.')) return;
+  // Remove completion data from habit_data
+  const data = loadHabitData();
+  Object.keys(data.completions).forEach(dateStr => {
+    delete data.completions[dateStr][h.id];
+    if(!Object.keys(data.completions[dateStr]).length) delete data.completions[dateStr];
+  });
+  data.habits = data.habits.filter(x => x.id !== h.id);
+  saveHabitData(data);
+  // Remove from habits array
+  habits = habits.filter(x => x.id !== h.id);
+  save();
+  if(selectedId === h.id) selectedId = null;
+  renderSidebar();
+  renderDetail();
 }
 function addCtxBtn(label, fn, danger){
   const btn = document.createElement('button');
@@ -611,45 +709,106 @@ document.getElementById('btnAddHabit').onclick = () => {
   renderSidebar();
 };
 
-// --- Edit Modal ---
+// --- Inline Edit ---
 let editColor = COLORS[0];
 let editDays = [];
+let inlineEditId = null;
 
-function openEdit(h){
-  editingId = h.id;
-  document.getElementById('editNameInput').value = h.name;
+function openInlineEdit(h){
+  inlineEditId = h.id;
   editColor = h.color;
   editDays = [...(h.days || [])];
-  buildColorPicker(document.getElementById('editColorPicker'), editColor, c => editColor = c);
-  buildDaysPicker(document.getElementById('editDaysPicker'), editDays, i => {
+  renderSidebar();
+  // Focus the name input after render
+  const input = document.querySelector('.inline-edit-form .form-input');
+  if(input) input.focus();
+}
+
+function renderInlineEditForm(h){
+  const form = document.createElement('div');
+  form.className = 'inline-edit-form';
+  form.onclick = (e) => e.stopPropagation();
+
+  const nameInput = document.createElement('input');
+  nameInput.className = 'form-input';
+  nameInput.value = h.name;
+  nameInput.maxLength = 60;
+  nameInput.placeholder = 'Habit name';
+  form.appendChild(nameInput);
+
+  const colorLabel = document.createElement('label');
+  colorLabel.className = 'form-label';
+  colorLabel.textContent = 'Color';
+  form.appendChild(colorLabel);
+
+  const colorContainer = document.createElement('div');
+  colorContainer.className = 'color-picker';
+  buildColorPicker(colorContainer, editColor, c => editColor = c);
+  form.appendChild(colorContainer);
+
+  const freqLabel = document.createElement('label');
+  freqLabel.className = 'form-label';
+  freqLabel.textContent = 'Frequency';
+  form.appendChild(freqLabel);
+
+  const freqSel = document.createElement('select');
+  freqSel.className = 'freq-select';
+  ['daily','weekdays','weekends','custom'].forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v;
+    opt.textContent = v.charAt(0).toUpperCase() + v.slice(1);
+    freqSel.appendChild(opt);
+  });
+  freqSel.value = h.freq;
+  form.appendChild(freqSel);
+
+  const daysContainer = document.createElement('div');
+  daysContainer.className = 'days-picker' + (h.freq === 'custom' ? ' show' : '');
+  buildDaysPicker(daysContainer, editDays, i => {
     const idx = editDays.indexOf(i);
     if(idx > -1) editDays.splice(idx,1); else editDays.push(i);
   });
-  const es = document.getElementById('editFreqSelect');
-  es.value = h.freq;
-  document.getElementById('editDaysPicker').classList.toggle('show', h.freq === 'custom');
-  es.onchange = () => document.getElementById('editDaysPicker').classList.toggle('show', es.value === 'custom');
-  document.getElementById('editModal').classList.add('show');
+  form.appendChild(daysContainer);
+
+  freqSel.onchange = () => daysContainer.classList.toggle('show', freqSel.value === 'custom');
+
+  const actions = document.createElement('div');
+  actions.className = 'form-actions';
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'btn-add';
+  saveBtn.textContent = 'Save';
+  saveBtn.onclick = () => {
+    const name = nameInput.value.trim();
+    if(!name){ nameInput.focus(); return }
+    h.name = name;
+    h.color = editColor;
+    h.freq = freqSel.value;
+    if(h.freq === 'weekdays') h.days = [1,2,3,4,5];
+    else if(h.freq === 'weekends') h.days = [0,6];
+    else if(h.freq === 'custom') h.days = [...editDays].sort();
+    else h.days = [];
+    inlineEditId = null;
+    save();
+    renderSidebar();
+    renderDetail();
+  };
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn-cancel';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.onclick = () => { inlineEditId = null; renderSidebar() };
+  actions.appendChild(saveBtn);
+  actions.appendChild(cancelBtn);
+  form.appendChild(actions);
+
+  // Enter to save
+  nameInput.onkeydown = (e) => { if(e.key === 'Enter') saveBtn.click(); if(e.key === 'Escape') cancelBtn.click() };
+
+  return form;
 }
 
+// Legacy modal handlers (keep for backwards compat)
 document.getElementById('btnCancelEdit').onclick = () => document.getElementById('editModal').classList.remove('show');
-document.getElementById('btnSaveEdit').onclick = () => {
-  const h = habits.find(x => x.id === editingId);
-  if(!h) return;
-  const name = document.getElementById('editNameInput').value.trim();
-  if(!name) return;
-  h.name = name;
-  h.color = editColor;
-  h.freq = document.getElementById('editFreqSelect').value;
-  if(h.freq === 'weekdays') h.days = [1,2,3,4,5];
-  else if(h.freq === 'weekends') h.days = [0,6];
-  else if(h.freq === 'custom') h.days = [...editDays].sort();
-  else h.days = [];
-  save();
-  document.getElementById('editModal').classList.remove('show');
-  renderSidebar();
-  renderDetail();
-};
+document.getElementById('btnSaveEdit').onclick = () => document.getElementById('editModal').classList.remove('show');
 
 // --- Habit Data (overview calendar data structure) ---
 const HABIT_DATA_KEY = 'habit_data';
