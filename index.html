@@ -100,6 +100,54 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .empty-state h2{font-family:'Lora',serif;font-size:22px;font-weight:600;color:var(--text)}
 .empty-state p{font-family:'Lora',serif;font-size:15px;max-width:360px;line-height:1.6}
 
+/* OVERVIEW CALENDAR */
+.overview-calendar{flex:1;display:flex;flex-direction:column;gap:0}
+.ov-cal-header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.ov-cal-header button{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;cursor:pointer;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;transition:background .15s}
+.ov-cal-header button:hover{background:var(--surface)}
+.ov-cal-title{font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;user-select:none}
+.ov-cal-today{font-size:12px;font-weight:600;color:var(--accent);border-color:var(--accent) !important}
+.ov-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.ov-weekday{text-align:center;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;color:var(--text-secondary);text-transform:uppercase;padding:6px 0}
+.ov-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;flex:1}
+.ov-cell{min-height:48px;border:1px solid var(--border);border-radius:6px;background:var(--surface);padding:4px 6px;cursor:pointer;transition:background .15s,border-color .15s;position:relative;display:flex;flex-direction:column}
+.ov-cell:hover{background:var(--bg);border-color:var(--text-secondary)}
+.ov-cell.outside{background:var(--bg);opacity:.4;cursor:default}
+.ov-cell.outside:hover{border-color:var(--border)}
+.ov-cell.today{border-color:var(--accent);border-width:2px;background:color-mix(in srgb, var(--accent) 5%, var(--surface))}
+.ov-cell.future .ov-indicators{display:none}
+.ov-cell.all-done{background:color-mix(in srgb, #2ecc71 10%, var(--surface))}
+.ov-cell.some-done{background:color-mix(in srgb, #f39c12 8%, var(--surface))}
+.ov-cell.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.ov-date{font-family:'DM Sans',sans-serif;font-size:12px;line-height:1;color:var(--text)}
+.ov-cell.outside .ov-date{color:var(--text-secondary)}
+.ov-indicators{display:flex;align-items:center;gap:3px;margin-top:auto;flex-wrap:wrap}
+.ov-check{color:#2ecc71;font-size:11px;line-height:1}
+.ov-partial{font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;color:var(--text-secondary);background:var(--border);border-radius:3px;padding:1px 3px;line-height:1}
+.ov-dots{display:flex;gap:2px;flex-wrap:wrap}
+.ov-dot{width:6px;height:6px;border-radius:50%;opacity:.7}
+.ov-dot.done{opacity:1}
+.ov-dot.undone{opacity:.25}
+
+/* DAY DETAIL PANEL */
+.day-detail{display:none;flex-direction:column;gap:14px;margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;max-width:480px}
+.day-detail.show{display:flex}
+.day-detail-header{display:flex;align-items:center;justify-content:space-between}
+.day-detail-title{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600}
+.day-detail-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-secondary);padding:0 4px;line-height:1}
+.day-detail-close:hover{color:var(--text)}
+.day-habit-list{display:flex;flex-direction:column;gap:6px}
+.day-habit-row{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:6px;cursor:pointer;transition:background .15s}
+.day-habit-row:hover{background:var(--bg)}
+.day-habit-cb{width:18px;height:18px;border-radius:4px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,border-color .15s;font-size:11px;color:#fff}
+.day-habit-cb.checked{background:#2ecc71;border-color:#2ecc71}
+.day-habit-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.day-habit-name{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;transition:color .15s}
+.day-habit-name.done{text-decoration:line-through;color:var(--text-secondary)}
+.day-notes textarea{width:100%;min-height:60px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;outline:none;transition:border-color .15s}
+.day-notes textarea:focus{border-color:var(--accent)}
+.day-notes label{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px}
+
 /* HABIT DETAIL */
 .habit-detail{display:none}
 .habit-detail.show{display:block}
@@ -212,7 +260,28 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
   <main class="main-content" id="mainContent">
-    <div class="empty-state" id="emptyState">
+    <div class="overview-calendar" id="overviewCalendar">
+      <div class="ov-cal-header">
+        <button id="ovCalPrev">←</button>
+        <span class="ov-cal-title" id="ovCalTitle"></span>
+        <button id="ovCalNext">→</button>
+        <button class="ov-cal-today" id="ovCalToday">Today</button>
+      </div>
+      <div class="ov-weekdays" id="ovWeekdays"></div>
+      <div class="ov-grid" id="ovGrid"></div>
+      <div class="day-detail" id="dayDetail">
+        <div class="day-detail-header">
+          <span class="day-detail-title" id="dayDetailTitle"></span>
+          <button class="day-detail-close" id="dayDetailClose">✕</button>
+        </div>
+        <div class="day-habit-list" id="dayHabitList"></div>
+        <div class="day-notes">
+          <label>Notes</label>
+          <textarea id="dayNotesInput" placeholder="Add a note for this day..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="empty-state" id="emptyState" style="display:none">
       <h2>Welcome to your Habit Tracker</h2>
       <p>Select a habit from the sidebar or create a new one to start tracking your progress.</p>
     </div>
@@ -336,6 +405,7 @@ function renderSidebar(){
     const row = makeHabitRow(h, true);
     aList.appendChild(row);
   });
+  syncHabitDataFromHabits();
   updateStatus();
 }
 
@@ -353,7 +423,7 @@ function makeHabitRow(h, isArchived){
 }
 
 function selectHabit(id){
-  selectedId = id;
+  if(selectedId === id){ selectedId = null } else { selectedId = id }
   sidebar.classList.remove('open');
   overlay.classList.remove('show');
   renderSidebar();
@@ -505,17 +575,238 @@ document.getElementById('btnSaveEdit').onclick = () => {
   renderDetail();
 };
 
+// --- Habit Data (overview calendar data structure) ---
+const HABIT_DATA_KEY = 'habit_data';
+function loadHabitData(){
+  try { return JSON.parse(localStorage.getItem(HABIT_DATA_KEY)) || { habits:[], completions:{}, notes:{} } }
+  catch(e){ return { habits:[], completions:{}, notes:{} } }
+}
+function saveHabitData(data){ localStorage.setItem(HABIT_DATA_KEY, JSON.stringify(data)) }
+
+function syncHabitDataFromHabits(){
+  const data = loadHabitData();
+  data.habits = habits.map(h => ({
+    id: h.id, name: h.name, color: h.color,
+    frequency: h.freq === 'custom' ? h.days.map(d=>DAYS[d]).join(',') : h.freq,
+    archived: h.archived, createdAt: new Date(h.created).toISOString().slice(0,10)
+  }));
+  // Merge per-habit completions into the shared completions structure
+  habits.forEach(h => {
+    Object.keys(h.completions).forEach(dateStr => {
+      if(!data.completions[dateStr]) data.completions[dateStr] = {};
+      data.completions[dateStr][h.id] = !!h.completions[dateStr];
+    });
+  });
+  saveHabitData(data);
+  return data;
+}
+
+function getCompletionForDate(dateStr){
+  const data = loadHabitData();
+  return data.completions[dateStr] || {};
+}
+function setCompletionForDate(dateStr, habitId, done){
+  const data = loadHabitData();
+  if(!data.completions[dateStr]) data.completions[dateStr] = {};
+  data.completions[dateStr][habitId] = done;
+  // Also sync back to per-habit completions
+  const h = habits.find(x => x.id === habitId);
+  if(h){
+    if(done) h.completions[dateStr] = true;
+    else delete h.completions[dateStr];
+    save();
+  }
+  saveHabitData(data);
+}
+function getNoteForDate(dateStr){
+  const data = loadHabitData();
+  return data.notes[dateStr] || '';
+}
+function setNoteForDate(dateStr, note){
+  const data = loadHabitData();
+  if(note.trim()) data.notes[dateStr] = note;
+  else delete data.notes[dateStr];
+  saveHabitData(data);
+}
+
+// --- Overview Calendar ---
+let ovYear, ovMonth, ovSelectedDate = null;
+const OV_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+function initOverviewCalendar(){
+  const now = new Date();
+  if(ovYear == null){ ovYear = now.getFullYear(); ovMonth = now.getMonth() }
+  const wdContainer = document.getElementById('ovWeekdays');
+  wdContainer.innerHTML = '';
+  OV_DAYS.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'ov-weekday';
+    el.textContent = d;
+    wdContainer.appendChild(el);
+  });
+  renderOverviewCalendar();
+}
+
+function renderOverviewCalendar(){
+  syncHabitDataFromHabits();
+  const data = loadHabitData();
+  const activeHabits = habits.filter(h => !h.archived && !h.paused);
+  document.getElementById('ovCalTitle').textContent =
+    new Date(ovYear, ovMonth).toLocaleString('default',{month:'long'}) + ' ' + ovYear;
+  const grid = document.getElementById('ovGrid');
+  grid.innerHTML = '';
+  const first = new Date(ovYear, ovMonth, 1);
+  // Monday-based: 0=Mon, 6=Sun
+  let startDay = (first.getDay() + 6) % 7;
+  const daysInMonth = new Date(ovYear, ovMonth + 1, 0).getDate();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const prevDays = new Date(ovYear, ovMonth, 0).getDate();
+
+  // Previous month padding
+  for(let i = startDay - 1; i >= 0; i--){
+    const cell = document.createElement('div');
+    cell.className = 'ov-cell outside';
+    cell.innerHTML = `<span class="ov-date">${prevDays - i}</span>`;
+    grid.appendChild(cell);
+  }
+
+  // Current month days
+  for(let day = 1; day <= daysInMonth; day++){
+    const date = new Date(ovYear, ovMonth, day);
+    const key = dateKey(date);
+    const isFuture = date > today;
+    const isToday = date.getTime() === today.getTime();
+    const comps = data.completions[key] || {};
+    const cell = document.createElement('div');
+
+    // Count completions for active habits
+    let doneCount = 0, totalCount = activeHabits.length;
+    activeHabits.forEach(h => { if(comps[h.id]) doneCount++ });
+
+    let cls = 'ov-cell';
+    if(isToday) cls += ' today';
+    if(isFuture) cls += ' future';
+    if(!isFuture && totalCount > 0){
+      if(doneCount === totalCount && doneCount > 0) cls += ' all-done';
+      else if(doneCount > 0) cls += ' some-done';
+    }
+    if(ovSelectedDate === key) cls += ' selected';
+    cell.className = cls;
+
+    let indicatorHTML = '';
+    if(!isFuture && totalCount > 0){
+      if(doneCount === totalCount && doneCount > 0){
+        indicatorHTML = '<span class="ov-check">✓</span>';
+      } else if(doneCount > 0){
+        indicatorHTML = `<span class="ov-partial">${doneCount}/${totalCount}</span>`;
+      }
+    }
+
+    cell.innerHTML = `<span class="ov-date">${day}</span><div class="ov-indicators">${indicatorHTML}</div>`;
+
+    if(!isFuture){
+      cell.onclick = () => openDayDetail(key, date);
+    }
+    grid.appendChild(cell);
+  }
+
+  // Next month padding
+  const total = startDay + daysInMonth;
+  const remaining = (7 - total % 7) % 7;
+  for(let i = 1; i <= remaining; i++){
+    const cell = document.createElement('div');
+    cell.className = 'ov-cell outside';
+    cell.innerHTML = `<span class="ov-date">${i}</span>`;
+    grid.appendChild(cell);
+  }
+}
+
+function openDayDetail(dateStr, date){
+  ovSelectedDate = dateStr;
+  renderOverviewCalendar();
+  const panel = document.getElementById('dayDetail');
+  panel.classList.add('show');
+  const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  document.getElementById('dayDetailTitle').textContent = date.toLocaleDateString('default', opts);
+  renderDayHabitList(dateStr);
+  const textarea = document.getElementById('dayNotesInput');
+  textarea.value = getNoteForDate(dateStr);
+  textarea.oninput = () => setNoteForDate(dateStr, textarea.value);
+}
+
+function renderDayHabitList(dateStr){
+  const list = document.getElementById('dayHabitList');
+  list.innerHTML = '';
+  const activeHabits = habits.filter(h => !h.archived && !h.paused);
+  const comps = getCompletionForDate(dateStr);
+
+  activeHabits.forEach(h => {
+    const done = !!comps[h.id];
+    const row = document.createElement('div');
+    row.className = 'day-habit-row';
+    row.innerHTML = `
+      <div class="day-habit-cb${done ? ' checked' : ''}">${done ? '✓' : ''}</div>
+      <span class="day-habit-dot" style="background:${h.color}"></span>
+      <span class="day-habit-name${done ? ' done' : ''}">${esc(h.name)}</span>`;
+    row.onclick = () => {
+      const newDone = !getCompletionForDate(dateStr)[h.id];
+      setCompletionForDate(dateStr, h.id, newDone);
+      renderDayHabitList(dateStr);
+      renderOverviewCalendar();
+      updateStatus();
+      // Re-select the cell visually
+      ovSelectedDate = dateStr;
+      document.querySelectorAll('.ov-cell.selected').forEach(c => c.classList.remove('selected'));
+      // Re-render preserves selection via ovSelectedDate
+    };
+    list.appendChild(row);
+  });
+
+  if(!activeHabits.length){
+    list.innerHTML = '<div style="font-size:13px;color:var(--text-secondary);padding:8px">No active habits. Create one from the sidebar.</div>';
+  }
+}
+
+document.getElementById('dayDetailClose').onclick = () => {
+  document.getElementById('dayDetail').classList.remove('show');
+  ovSelectedDate = null;
+  renderOverviewCalendar();
+};
+document.getElementById('ovCalPrev').onclick = () => {
+  ovMonth--; if(ovMonth<0){ovMonth=11;ovYear--}
+  ovSelectedDate = null;
+  document.getElementById('dayDetail').classList.remove('show');
+  renderOverviewCalendar();
+};
+document.getElementById('ovCalNext').onclick = () => {
+  ovMonth++; if(ovMonth>11){ovMonth=0;ovYear++}
+  ovSelectedDate = null;
+  document.getElementById('dayDetail').classList.remove('show');
+  renderOverviewCalendar();
+};
+document.getElementById('ovCalToday').onclick = () => {
+  const now = new Date();
+  ovYear = now.getFullYear(); ovMonth = now.getMonth();
+  ovSelectedDate = null;
+  document.getElementById('dayDetail').classList.remove('show');
+  renderOverviewCalendar();
+};
+
 // --- Detail View ---
 function renderDetail(){
   const emptyState = document.getElementById('emptyState');
   const detail = document.getElementById('habitDetail');
+  const overview = document.getElementById('overviewCalendar');
   const h = habits.find(x => x.id === selectedId);
   if(!h){
-    emptyState.style.display = '';
+    emptyState.style.display = 'none';
     detail.classList.remove('show');
+    overview.style.display = '';
+    renderOverviewCalendar();
     return;
   }
   emptyState.style.display = 'none';
+  overview.style.display = 'none';
   detail.classList.add('show');
   document.getElementById('detailDot').style.background = h.color;
   document.getElementById('detailName').textContent = h.name;
@@ -639,6 +930,8 @@ function esc(s){ const d=document.createElement('div'); d.textContent=s; return 
 
 // --- Init ---
 load();
+syncHabitDataFromHabits();
+initOverviewCalendar();
 renderSidebar();
 renderDetail();
 
