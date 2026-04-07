@@ -86,6 +86,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);border-right:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;overflow:hidden;transition:transform .25s ease}
 .sidebar-inner{flex:1;overflow-y:auto;padding:16px}
 .sidebar-heading{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text)}
+.btn-dashboard{width:100%;padding:10px 12px;background:var(--surface);border:2px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;margin-bottom:10px;transition:background .15s,border-color .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-dashboard:hover{background:var(--bg);border-color:var(--text-secondary)}
+.btn-dashboard.active{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb, var(--accent) 8%, var(--surface))}
+.btn-dashboard svg{width:16px;height:16px;flex-shrink:0}
 .btn-new-habit{width:100%;padding:9px 12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:14px;transition:opacity .15s}
 .btn-new-habit:hover{opacity:.88}
 
@@ -464,6 +468,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-inner">
       <div class="sidebar-heading">My Habits</div>
+      <button class="btn-dashboard" id="btnDashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</button>
       <button class="btn-new-habit" id="btnNewHabit">+ New Habit</button>
 
       <div class="new-habit-form" id="newHabitForm">
@@ -516,19 +521,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
   <main class="main-content" id="mainContent">
-    <div id="overviewWrapper">
-      <div class="global-stats" id="globalStats">
-        <div class="gs-card"><div class="gs-value" id="gsStreak">0</div><div class="gs-label">Current Streak</div></div>
-        <div class="gs-card"><div class="gs-value" id="gsBestStreak">0</div><div class="gs-label">Best Streak</div></div>
-        <div class="gs-card"><div class="gs-value" id="gsMonthRate">0%</div><div class="gs-label">This Month</div></div>
-        <div class="gs-card"><div class="gs-value" id="gsTotalCheckins">0</div><div class="gs-label">Total Check-ins</div></div>
-      </div>
-      <div class="view-tabs">
-        <button class="view-tab active" id="tabDashboard">Dashboard</button>
-        <button class="view-tab" id="tabCalendar">Calendar</button>
-        <button class="view-tab" id="tabHeatmap">Heatmap</button>
-      </div>
     <div class="dashboard-view" id="dashboardView">
+      <div class="global-stats" id="globalStatsDash"></div>
       <div class="dash-nav">
         <button id="dashPrev">←</button>
         <span class="dash-title" id="dashTitle"></span>
@@ -539,6 +533,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
         <div class="dash-grid" id="dashGrid"></div>
       </div>
     </div>
+    <div id="overviewWrapper">
+      <div class="global-stats" id="globalStats">
+        <div class="gs-card"><div class="gs-value" id="gsStreak">0</div><div class="gs-label">Current Streak</div></div>
+        <div class="gs-card"><div class="gs-value" id="gsBestStreak">0</div><div class="gs-label">Best Streak</div></div>
+        <div class="gs-card"><div class="gs-value" id="gsMonthRate">0%</div><div class="gs-label">This Month</div></div>
+        <div class="gs-card"><div class="gs-value" id="gsTotalCheckins">0</div><div class="gs-label">Total Check-ins</div></div>
+      </div>
+      <div class="view-tabs">
+        <button class="view-tab active" id="tabCalendar">Calendar</button>
+        <button class="view-tab" id="tabHeatmap">Heatmap</button>
+      </div>
     <div class="today-view" id="todayView">
       <div class="today-progress" id="todayProgress"></div>
       <div class="today-cards" id="todayCards"></div>
@@ -834,7 +839,13 @@ function reorderHabit(dragId, targetId, before){
 }
 
 function selectHabit(id){
-  if(selectedId === id){ selectedId = null } else { selectedId = id }
+  if(selectedId === id){
+    selectedId = null;
+  } else {
+    selectedId = id;
+    // Exit dashboard mode when selecting a habit
+    if(currentView === 'dashboard') currentView = 'calendar';
+  }
   sidebar.classList.remove('open');
   overlay.classList.remove('show');
   renderSidebar();
@@ -1292,25 +1303,34 @@ document.getElementById('ovCalToday').onclick = () => {
 };
 
 // --- View Tabs ---
-let currentView = 'dashboard';
-const tabDashboard = document.getElementById('tabDashboard');
+let currentView = 'calendar';
 const tabCalendar = document.getElementById('tabCalendar');
 const tabHeatmap = document.getElementById('tabHeatmap');
 const dashboardViewEl = document.getElementById('dashboardView');
 const calendarView = document.getElementById('overviewCalendar');
 const heatmapViewEl = document.getElementById('heatmapView');
 const todayViewEl = document.getElementById('todayView');
+const btnDashboard = document.getElementById('btnDashboard');
 
 function isMobile(){ return window.innerWidth <= 768 }
 
 function switchView(view){
   currentView = view;
-  // Desktop tabs
-  tabDashboard.classList.toggle('active', view === 'dashboard');
+  const isDash = view === 'dashboard';
+  // Desktop tabs — dashboard has no tab, it's a sidebar button
   tabCalendar.classList.toggle('active', view === 'calendar');
   tabHeatmap.classList.toggle('active', view === 'heatmap');
-  // View visibility
-  dashboardViewEl.style.display = view === 'dashboard' ? 'flex' : 'none';
+  btnDashboard.classList.toggle('active', isDash);
+  // When dashboard is active, hide the overviewWrapper (tabs+calendar+heatmap), show dashboard
+  const wrapper = document.getElementById('overviewWrapper');
+  if(isDash){
+    wrapper.style.display = 'none';
+    dashboardViewEl.style.display = 'flex';
+  } else {
+    wrapper.style.display = '';
+    dashboardViewEl.style.display = 'none';
+  }
+  // Sub-views inside overviewWrapper
   todayViewEl.style.display = view === 'today' ? 'flex' : 'none';
   calendarView.style.display = view === 'calendar' ? '' : 'none';
   heatmapViewEl.style.display = view === 'heatmap' ? 'flex' : 'none';
@@ -1323,13 +1343,26 @@ function switchView(view){
   if(bnavEl) bnavEl.classList.add('active');
   // Close bottom sheet
   closeBottomSheet();
+  // Deselect habit when switching to dashboard
+  if(isDash){
+    selectedId = null;
+    document.getElementById('habitDetail').classList.remove('show');
+    document.getElementById('emptyState').style.display = 'none';
+    renderSidebar();
+  }
   // Render
   if(view === 'dashboard') renderDashboard();
   if(view === 'today') renderTodayView();
   if(view === 'calendar') renderOverviewCalendar();
   if(view === 'heatmap') renderHeatmap();
 }
-tabDashboard.onclick = () => switchView('dashboard');
+
+// Sidebar dashboard button
+btnDashboard.onclick = () => {
+  switchView('dashboard');
+  sidebar.classList.remove('open');
+  overlay.classList.remove('show');
+};
 tabCalendar.onclick = () => switchView('calendar');
 tabHeatmap.onclick = () => switchView('heatmap');
 
@@ -1351,6 +1384,9 @@ function renderDashboard(){
   initDashMonth();
   syncHabitDataFromHabits();
   renderGlobalStats();
+  // Copy stats into dashboard's own stats container
+  const dashStats = document.getElementById('globalStatsDash');
+  dashStats.innerHTML = document.getElementById('globalStats').innerHTML;
   const data = loadHabitData();
   const activeHabits = habits.filter(h => !h.archived && !h.paused);
   const daysInMonth = new Date(dashYear, dashMonth + 1, 0).getDate();
@@ -1817,15 +1853,23 @@ function renderDetail(){
   if(!h){
     detail.classList.remove('show');
     if(checkEmptyState()) return;
-    wrapper.style.display = '';
-    if(currentView === 'dashboard') renderDashboard();
-    else if(currentView === 'today') renderTodayView();
-    else if(currentView === 'calendar') renderOverviewCalendar();
-    else renderHeatmap();
+    if(currentView === 'dashboard'){
+      wrapper.style.display = 'none';
+      dashboardViewEl.style.display = 'flex';
+      renderDashboard();
+    } else {
+      wrapper.style.display = '';
+      dashboardViewEl.style.display = 'none';
+      if(currentView === 'today') renderTodayView();
+      else if(currentView === 'calendar') renderOverviewCalendar();
+      else renderHeatmap();
+    }
     return;
   }
   document.getElementById('emptyState').style.display = 'none';
   wrapper.style.display = 'none';
+  dashboardViewEl.style.display = 'none';
+  btnDashboard.classList.remove('active');
   detail.classList.add('show');
   document.getElementById('detailDot').style.background = h.color;
   document.getElementById('detailName').textContent = h.name;
@@ -2287,6 +2331,7 @@ function checkEmptyState(){
   if(activeHabits.length === 0 && !selectedId){
     emptyState.style.display = '';
     wrapper.style.display = 'none';
+    dashboardViewEl.style.display = 'none';
     detail.classList.remove('show');
     return true;
   }
@@ -2301,9 +2346,9 @@ initOverviewCalendar();
 initDashMonth();
 todayViewEl.style.display = 'none';
 heatmapViewEl.style.display = 'none';
-calendarView.style.display = 'none';
+dashboardViewEl.style.display = 'none';
 renderSidebar();
-switchView('dashboard');
+switchView('calendar');
 renderDetail();
 startReminderCheck();
 
