@@ -100,6 +100,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .empty-state h2{font-family:'Lora',serif;font-size:22px;font-weight:600;color:var(--text)}
 .empty-state p{font-family:'Lora',serif;font-size:15px;max-width:360px;line-height:1.6}
 
+/* GLOBAL STATS BAR */
+.global-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.gs-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.gs-value{font-family:'DM Sans',sans-serif;font-size:28px;font-weight:700;color:var(--accent);line-height:1.1}
+.gs-label{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;text-transform:uppercase;color:var(--text-secondary);margin-top:4px;letter-spacing:.3px}
+@media(max-width:640px){.global-stats{grid-template-columns:repeat(2,1fr)}}
+
+/* PER-HABIT STATS (in day detail) */
+.habit-stats-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:4px;padding:10px 0;border-top:1px solid var(--border)}
+.hs-card{display:flex;flex-direction:column;gap:1px}
+.hs-value{font-family:'DM Sans',sans-serif;font-size:18px;font-weight:700;color:var(--accent);line-height:1.1}
+.hs-label{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.2px}
+
 /* OVERVIEW CALENDAR */
 .overview-calendar{flex:1;display:flex;flex-direction:column;gap:0}
 .ov-cal-header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
@@ -261,6 +274,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 
   <main class="main-content" id="mainContent">
     <div class="overview-calendar" id="overviewCalendar">
+      <div class="global-stats" id="globalStats">
+        <div class="gs-card"><div class="gs-value" id="gsStreak">0</div><div class="gs-label">Current Streak</div></div>
+        <div class="gs-card"><div class="gs-value" id="gsBestStreak">0</div><div class="gs-label">Best Streak</div></div>
+        <div class="gs-card"><div class="gs-value" id="gsMonthRate">0%</div><div class="gs-label">This Month</div></div>
+        <div class="gs-card"><div class="gs-value" id="gsTotalCheckins">0</div><div class="gs-label">Total Check-ins</div></div>
+      </div>
       <div class="ov-cal-header">
         <button id="ovCalPrev">←</button>
         <span class="ov-cal-title" id="ovCalTitle"></span>
@@ -275,6 +294,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
           <button class="day-detail-close" id="dayDetailClose">✕</button>
         </div>
         <div class="day-habit-list" id="dayHabitList"></div>
+        <div id="dayHabitStats"></div>
         <div class="day-notes">
           <label>Notes</label>
           <textarea id="dayNotesInput" placeholder="Add a note for this day..."></textarea>
@@ -649,6 +669,7 @@ function initOverviewCalendar(){
 
 function renderOverviewCalendar(){
   syncHabitDataFromHabits();
+  renderGlobalStats();
   const data = loadHabitData();
   const activeHabits = habits.filter(h => !h.archived && !h.paused);
   document.getElementById('ovCalTitle').textContent =
@@ -729,6 +750,7 @@ function openDayDetail(dateStr, date){
   const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
   document.getElementById('dayDetailTitle').textContent = date.toLocaleDateString('default', opts);
   renderDayHabitList(dateStr);
+  renderPerHabitStats(dateStr);
   const textarea = document.getElementById('dayNotesInput');
   textarea.value = getNoteForDate(dateStr);
   textarea.oninput = () => setNoteForDate(dateStr, textarea.value);
@@ -752,12 +774,10 @@ function renderDayHabitList(dateStr){
       const newDone = !getCompletionForDate(dateStr)[h.id];
       setCompletionForDate(dateStr, h.id, newDone);
       renderDayHabitList(dateStr);
+      renderPerHabitStats(dateStr);
       renderOverviewCalendar();
       updateStatus();
-      // Re-select the cell visually
       ovSelectedDate = dateStr;
-      document.querySelectorAll('.ov-cell.selected').forEach(c => c.classList.remove('selected'));
-      // Re-render preserves selection via ovSelectedDate
     };
     list.appendChild(row);
   });
@@ -863,7 +883,7 @@ function renderCalendar(h){
       d.onclick = () => {
         if(h.completions[key]) delete h.completions[key];
         else h.completions[key] = true;
-        save(); renderCalendar(h); renderStats(h); updateStatus();
+        save(); syncHabitDataFromHabits(); renderCalendar(h); renderStats(h); updateStatus();
       };
     }
     grid.appendChild(d);
@@ -883,36 +903,233 @@ document.getElementById('calPrev').onclick = () => { calMonth--; if(calMonth<0){
 document.getElementById('calNext').onclick = () => { calMonth++; if(calMonth>11){calMonth=0;calYear++} const h=habits.find(x=>x.id===selectedId); if(h) renderCalendar(h) };
 
 function dateKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0') }
+function parseDate(s){ const p=s.split('-'); return new Date(+p[0],+p[1]-1,+p[2]) }
 
-// --- Stats ---
-function renderStats(h){
-  const row = document.getElementById('statsRow');
-  const total = Object.keys(h.completions).length;
-  const streak = calcStreak(h);
-  const thisMonth = Object.keys(h.completions).filter(k => k.startsWith(calYear+'-'+String(calMonth+1).padStart(2,'0'))).length;
-  row.innerHTML = `
-    <div class="stat-card"><div class="stat-value">${streak}</div><div class="stat-label">Current Streak</div></div>
-    <div class="stat-card"><div class="stat-value">${thisMonth}</div><div class="stat-label">This Month</div></div>
-    <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">Total Completions</div></div>`;
+// --- Frequency-aware scheduling ---
+function isHabitScheduled(h, date){
+  const dow = date.getDay(); // 0=Sun
+  if(h.freq === 'daily') return true;
+  if(h.freq === 'weekdays') return dow >= 1 && dow <= 5;
+  if(h.freq === 'weekends') return dow === 0 || dow === 6;
+  if(h.freq === 'custom' && h.days && h.days.length) return h.days.includes(dow);
+  return true;
 }
 
-function calcStreak(h){
+// --- Per-Habit Streak ---
+function calcHabitStreak(h){
   let streak = 0;
   const today = new Date(); today.setHours(0,0,0,0);
   let d = new Date(today);
-  // If today is not completed, start from yesterday
+  // Skip today if not completed (give benefit of the doubt)
   if(!h.completions[dateKey(d)]){ d.setDate(d.getDate()-1) }
-  while(h.completions[dateKey(d)]){
-    streak++;
+  while(true){
+    const key = dateKey(d);
+    if(isHabitScheduled(h, d)){
+      if(h.completions[key]) streak++;
+      else break;
+    }
     d.setDate(d.getDate()-1);
+    // Don't go before habit creation
+    if(d < new Date(h.created)){ break }
   }
   return streak;
+}
+
+function calcHabitBestStreak(h){
+  const keys = Object.keys(h.completions).sort();
+  if(!keys.length) return 0;
+  const startDate = parseDate(keys[0]);
+  const today = new Date(); today.setHours(0,0,0,0);
+  let best = 0, cur = 0;
+  let d = new Date(startDate);
+  while(d <= today){
+    const key = dateKey(d);
+    if(isHabitScheduled(h, d)){
+      if(h.completions[key]){ cur++; if(cur > best) best = cur }
+      else cur = 0;
+    }
+    d.setDate(d.getDate()+1);
+  }
+  return best;
+}
+
+function calcHabitRate30(h){
+  const today = new Date(); today.setHours(0,0,0,0);
+  let scheduled = 0, done = 0;
+  for(let i = 0; i < 30; i++){
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    if(isHabitScheduled(h, d)){
+      scheduled++;
+      if(h.completions[dateKey(d)]) done++;
+    }
+  }
+  return scheduled ? Math.round(done / scheduled * 100) : 0;
+}
+
+// --- Global Streak (all active habits completed) ---
+function isAllDayScheduled(date, activeHabits){
+  return activeHabits.some(h => isHabitScheduled(h, date));
+}
+
+function isDayFullyCompleted(date, activeHabits, data){
+  const key = dateKey(date);
+  const comps = data.completions[key] || {};
+  const scheduled = activeHabits.filter(h => isHabitScheduled(h, date));
+  if(!scheduled.length) return false;
+  return scheduled.every(h => comps[h.id]);
+}
+
+function calcGlobalStreak(){
+  const activeHabits = habits.filter(h => !h.archived && !h.paused);
+  if(!activeHabits.length) return 0;
+  const data = loadHabitData();
+  const today = new Date(); today.setHours(0,0,0,0);
+  let d = new Date(today);
+  let streak = 0;
+  // If today isn't fully done, start from yesterday
+  if(!isDayFullyCompleted(d, activeHabits, data)){ d.setDate(d.getDate()-1) }
+  while(true){
+    if(!isAllDayScheduled(d, activeHabits)){
+      // No habits scheduled this day — skip, don't break streak
+      d.setDate(d.getDate()-1);
+      // Safety: don't go back more than 1000 days
+      if(today - d > 1000*86400000) break;
+      continue;
+    }
+    if(isDayFullyCompleted(d, activeHabits, data)){
+      streak++;
+      d.setDate(d.getDate()-1);
+    } else break;
+  }
+  return streak;
+}
+
+function calcGlobalBestStreak(){
+  const activeHabits = habits.filter(h => !h.archived && !h.paused);
+  if(!activeHabits.length) return 0;
+  const data = loadHabitData();
+  // Find earliest date across all completions
+  const allDates = Object.keys(data.completions).sort();
+  if(!allDates.length) return 0;
+  const start = parseDate(allDates[0]);
+  const today = new Date(); today.setHours(0,0,0,0);
+  let best = 0, cur = 0;
+  let d = new Date(start);
+  while(d <= today){
+    if(!isAllDayScheduled(d, activeHabits)){
+      d.setDate(d.getDate()+1);
+      continue;
+    }
+    if(isDayFullyCompleted(d, activeHabits, data)){
+      cur++;
+      if(cur > best) best = cur;
+    } else {
+      cur = 0;
+    }
+    d.setDate(d.getDate()+1);
+  }
+  return best;
+}
+
+function calcMonthCompletionRate(){
+  const activeHabits = habits.filter(h => !h.archived && !h.paused);
+  if(!activeHabits.length) return 0;
+  const data = loadHabitData();
+  const now = new Date();
+  const year = ovYear != null ? ovYear : now.getFullYear();
+  const month = ovMonth != null ? ovMonth : now.getMonth();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  let totalSlots = 0, completedSlots = 0;
+  for(let day = 1; day <= daysInMonth; day++){
+    const d = new Date(year, month, day);
+    if(d > today) break;
+    activeHabits.forEach(h => {
+      if(isHabitScheduled(h, d)){
+        totalSlots++;
+        const comps = data.completions[dateKey(d)] || {};
+        if(comps[h.id]) completedSlots++;
+      }
+    });
+  }
+  return totalSlots ? Math.round(completedSlots / totalSlots * 100) : 0;
+}
+
+function calcTotalCheckins(){
+  const data = loadHabitData();
+  let total = 0;
+  Object.values(data.completions).forEach(dayComps => {
+    Object.values(dayComps).forEach(v => { if(v) total++ });
+  });
+  return total;
+}
+
+function renderGlobalStats(){
+  document.getElementById('gsStreak').textContent = calcGlobalStreak();
+  document.getElementById('gsBestStreak').textContent = calcGlobalBestStreak();
+  document.getElementById('gsMonthRate').textContent = calcMonthCompletionRate() + '%';
+  document.getElementById('gsTotalCheckins').textContent = calcTotalCheckins();
+}
+
+// --- Per-habit stats in day detail ---
+function renderPerHabitStats(dateStr){
+  const container = document.getElementById('dayHabitStats');
+  const comps = getCompletionForDate(dateStr);
+  // Find which habits are checked for this day — show stats for each
+  const activeHabits = habits.filter(h => !h.archived && !h.paused);
+  const checkedHabits = activeHabits.filter(h => comps[h.id]);
+  if(!checkedHabits.length && activeHabits.length){
+    // Show stats for all active habits
+    container.innerHTML = '';
+    activeHabits.forEach(h => {
+      container.appendChild(makeHabitStatsBlock(h));
+    });
+    return;
+  }
+  container.innerHTML = '';
+  activeHabits.forEach(h => {
+    container.appendChild(makeHabitStatsBlock(h));
+  });
+}
+
+function makeHabitStatsBlock(h){
+  const div = document.createElement('div');
+  const streak = calcHabitStreak(h);
+  const best = calcHabitBestStreak(h);
+  const rate = calcHabitRate30(h);
+  const total = Object.keys(h.completions).length;
+  div.innerHTML = `
+    <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:6px;margin-top:8px">
+      <span style="width:8px;height:8px;border-radius:50%;background:${h.color};display:inline-block"></span>${esc(h.name)}
+    </div>
+    <div class="habit-stats-row">
+      <div class="hs-card"><div class="hs-value">${streak}</div><div class="hs-label">Current Streak</div></div>
+      <div class="hs-card"><div class="hs-value">${best}</div><div class="hs-label">Best Streak</div></div>
+      <div class="hs-card"><div class="hs-value">${rate}%</div><div class="hs-label">Last 30 Days</div></div>
+      <div class="hs-card"><div class="hs-value">${total}</div><div class="hs-label">Total</div></div>
+    </div>`;
+  return div;
+}
+
+// --- Per-habit detail stats ---
+function renderStats(h){
+  const row = document.getElementById('statsRow');
+  const total = Object.keys(h.completions).length;
+  const streak = calcHabitStreak(h);
+  const best = calcHabitBestStreak(h);
+  const rate = calcHabitRate30(h);
+  row.innerHTML = `
+    <div class="stat-card"><div class="stat-value">${streak}</div><div class="stat-label">Current Streak</div></div>
+    <div class="stat-card"><div class="stat-value">${best}</div><div class="stat-label">Best Streak</div></div>
+    <div class="stat-card"><div class="stat-value">${rate}%</div><div class="stat-label">Last 30 Days</div></div>
+    <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">Total Completions</div></div>`;
 }
 
 function calcMaxStreak(){
   let max = 0;
   habits.filter(h => !h.archived && !h.paused).forEach(h => {
-    const s = calcStreak(h);
+    const s = calcHabitStreak(h);
     if(s > max) max = s;
   });
   return max;
