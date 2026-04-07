@@ -182,28 +182,30 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .dash-title{font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;user-select:none}
 .dash-today-btn{font-size:12px;font-weight:600;color:var(--accent);border-color:var(--accent) !important}
 .dash-scroll{overflow-x:auto;position:relative;padding-bottom:6px}
-.dash-grid{display:grid;gap:0;width:max-content}
-.dash-cell{display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;border:1px solid var(--border);border-top:none;border-left:none;background:var(--bg);transition:background .12s}
-.dash-cell:first-child{border-left:1px solid var(--border)}
-.dash-header{background:var(--surface);font-size:11px;font-weight:600;color:var(--text-secondary);position:sticky;top:0;z-index:2;border-top:1px solid var(--border)}
+.dash-grid{display:grid;gap:0;width:max-content;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.dash-cell{display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;background:var(--bg);transition:background .12s;min-height:32px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.dash-cell:last-child{border-right:none}
+.dash-header{background:var(--surface);font-size:11px;font-weight:600;color:var(--text-secondary);position:sticky;top:0;z-index:2}
 .dash-header.today-col{color:var(--accent);background:color-mix(in srgb, var(--accent) 6%, var(--surface))}
-.dash-habit-label{position:sticky;left:0;z-index:3;background:var(--surface);border-left:1px solid var(--border);justify-content:flex-start;gap:8px;padding:0 10px;font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:130px}
+.dash-habit-label{position:sticky;left:0;z-index:3;background:var(--surface);justify-content:flex-start;gap:8px;padding:0 10px;font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:130px}
 .dash-habit-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.dash-habit-label.header-corner{z-index:4;font-weight:600;color:var(--text-secondary);border-top:1px solid var(--border)}
+.dash-habit-label.header-corner{z-index:4;font-weight:600;color:var(--text-secondary)}
 .dash-day-cell{cursor:pointer;position:relative}
 .dash-day-cell:hover{background:var(--surface)}
 .dash-day-cell.future{opacity:.3;cursor:default}
 .dash-circle{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);transition:background .15s,border-color .15s,transform .15s}
-.dash-circle.filled{border:none;transform:scale(1)}
+.dash-circle.filled{border:none}
 .dash-circle.anim{animation:checkPulse .35s ease}
 .dash-score-cell{background:var(--surface);font-size:10px;font-weight:600;color:var(--text-secondary)}
 .dash-score-cell.today-col{color:var(--accent)}
-.dash-monthly{position:sticky;right:0;z-index:2;background:var(--surface);border-right:1px solid var(--border);flex-direction:column;gap:2px;padding:0 8px;min-width:60px}
+.dash-monthly{position:sticky;right:0;z-index:2;background:var(--surface);flex-direction:column;gap:2px;padding:0 8px;min-width:60px}
 .dash-monthly-pct{font-size:11px;font-weight:700;color:var(--accent)}
-.dash-monthly-bar{width:100%;height:3px;border-radius:2px;background:var(--border);overflow:hidden}
+.dash-monthly-bar{width:40px;height:3px;border-radius:2px;background:var(--border);overflow:hidden}
 .dash-monthly-fill{height:100%;border-radius:2px;transition:width .2s}
-.dash-monthly.header-corner{z-index:4;font-weight:600;font-size:10px;color:var(--text-secondary);border-top:1px solid var(--border)}
+.dash-monthly.header-corner{z-index:4;font-weight:600;font-size:10px;color:var(--text-secondary)}
 .dash-tooltip{position:fixed;background:var(--text);color:var(--bg);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;padding:5px 9px;border-radius:5px;pointer-events:none;z-index:400;white-space:nowrap;opacity:0;transition:opacity .12s}
+.dash-tooltip.show{opacity:1}
+.dash-empty{padding:32px;text-align:center;color:var(--text-secondary);font-size:14px}
 .dash-tooltip.show{opacity:1}
 
 /* CHECK ANIMATION */
@@ -430,12 +432,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
   .day-detail{display:none !important}
   .today-card{padding:14px}
   .today-cb{width:22px;height:22px}
-  .dash-cell{height:28px !important}
+  .dash-cell{min-height:28px}
   .dash-habit-label{min-width:100px;font-size:11px;padding:0 8px}
   .dash-circle{width:14px;height:14px}
   .dash-score-cell{font-size:9px}
-  .dash-monthly{min-width:48px;padding:0 6px}
+  .dash-monthly{min-width:52px;padding:0 6px}
   .dash-monthly-pct{font-size:10px}
+  .dash-monthly-bar{width:32px}
   .empty-state-arrow{transform:rotate(90deg)}
   @keyframes pointLeft{0%,100%{transform:rotate(90deg) translateX(0)}50%{transform:rotate(90deg) translateX(-8px)}}
 }
@@ -1356,11 +1359,23 @@ function renderDashboard(){
   document.getElementById('dashTitle').textContent = monthNames[dashMonth] + ' ' + dashYear;
 
   const grid = document.getElementById('dashGrid');
-  const numCols = daysInMonth + 2; // habit label + days + monthly score
-  const cellH = isMobile() ? 28 : 32;
-  grid.style.gridTemplateColumns = (isMobile() ? '100px ' : '130px ') + ('repeat(' + daysInMonth + ',' + cellH + 'px) ') + (isMobile() ? '48px' : '60px');
-  grid.style.gridTemplateRows = 'repeat(' + (activeHabits.length + 2) + ',' + cellH + 'px)';
   grid.innerHTML = '';
+
+  if(activeHabits.length === 0){
+    grid.style.gridTemplateColumns = '1fr';
+    grid.style.gridTemplateRows = 'auto';
+    const empty = document.createElement('div');
+    empty.className = 'dash-empty';
+    empty.textContent = 'Add your first habit to see the dashboard matrix.';
+    grid.appendChild(empty);
+    return;
+  }
+
+  const cellH = isMobile() ? 28 : 32;
+  const labelW = isMobile() ? 100 : 130;
+  const monthW = isMobile() ? 52 : 64;
+  grid.style.gridTemplateColumns = labelW + 'px repeat(' + daysInMonth + ',' + cellH + 'px) ' + monthW + 'px';
+  grid.style.gridTemplateRows = 'repeat(' + (activeHabits.length + 2) + ',' + cellH + 'px)';
 
   // Header row: corner + day numbers + monthly corner
   const corner = document.createElement('div');
