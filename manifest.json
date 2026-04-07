@@ -1,0 +1,16 @@
+{
+  "name": "freehabittracker.app",
+  "short_name": "Habit Tracker",
+  "description": "Free habit tracker app — track your daily habits and build streaks.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf9f6",
+  "theme_color": "#faf9f6",
+  "icons": [
+    {
+      "src": "og-image.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

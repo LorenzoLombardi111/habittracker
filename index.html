@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>freehabittracker.app — Free Habit Tracker</title>
+<meta name="description" content="Free habit tracker app — track your daily habits and build streaks. No sign-up required. All data saved locally.">
+<meta property="og:title" content="freehabittracker.app">
+<meta property="og:description" content="Track your habits. Build streaks. Stay consistent.">
+<meta property="og:image" content="https://freehabittracker.app/og-image.svg">
+<meta property="og:url" content="https://freehabittracker.app">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✅</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf9f6;--surface:#f4f2ee;--border:#e8e4dd;--text:#1a1917;--accent:#C49A2A;
+  --text-secondary:#6b6760;--sidebar-w:260px;--header-h:52px;--status-h:32px;
+}
+[data-theme="dark"]{
+  --bg:#141412;--surface:#1e1c1a;--border:#2e2b27;--text:#f0ede8;--accent:#D4A835;
+  --text-secondary:#9a9590;
+}
+html{height:100%}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100%;overflow:hidden;transition:background .2s,color .2s}
+
+/* HEADER */
+.header{height:var(--header-h);display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--border);background:var(--surface);position:relative;z-index:100}
+.header-left{display:flex;align-items:center;gap:12px}
+.hamburger{display:none;background:none;border:none;color:var(--text);cursor:pointer;padding:4px}
+.hamburger svg{width:22px;height:22px}
+.logo{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;color:var(--accent);user-select:none}
+.theme-toggle{background:none;border:1px solid var(--border);border-radius:6px;padding:6px 8px;cursor:pointer;color:var(--text);display:flex;align-items:center;gap:6px;font-size:12px;font-family:'DM Sans',sans-serif}
+.theme-toggle:hover{background:var(--border)}
+
+/* LAYOUT */
+.app{display:flex;height:calc(100vh - var(--header-h) - var(--status-h))}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);border-right:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;overflow:hidden;transition:transform .25s ease}
+.sidebar-inner{flex:1;overflow-y:auto;padding:16px}
+.sidebar-heading{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text)}
+.btn-new-habit{width:100%;padding:9px 12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:14px;transition:opacity .15s}
+.btn-new-habit:hover{opacity:.88}
+
+/* HABIT LIST */
+.habit-list{display:flex;flex-direction:column;gap:2px}
+.habit-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:background .15s,border-color .15s;position:relative}
+.habit-item:hover{background:var(--bg)}
+.habit-item.active{border-color:var(--accent);background:var(--bg)}
+.habit-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.habit-name{font-size:13px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.habit-status{font-size:10px;color:var(--text-secondary);flex-shrink:0}
+.habit-menu-btn{background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:16px;padding:0 4px;line-height:1;opacity:0;transition:opacity .15s}
+.habit-item:hover .habit-menu-btn{opacity:1}
+
+/* CONTEXT MENU */
+.ctx-menu{position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:4px;min-width:140px;z-index:500;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.ctx-menu button{display:block;width:100%;text-align:left;padding:7px 12px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);border-radius:4px;cursor:pointer}
+.ctx-menu button:hover{background:var(--bg)}
+.ctx-menu button.danger{color:#e74c3c}
+
+/* ARCHIVED SECTION */
+.archived-section{margin-top:20px;border-top:1px solid var(--border);padding-top:12px}
+.archived-toggle{background:none;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;gap:6px;padding:4px 0;width:100%}
+.archived-toggle svg{width:14px;height:14px;transition:transform .2s}
+.archived-toggle.open svg{transform:rotate(90deg)}
+.archived-list{display:none;flex-direction:column;gap:2px;margin-top:8px}
+.archived-list.show{display:flex}
+
+/* NEW HABIT FORM */
+.new-habit-form{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px;display:none}
+.new-habit-form.show{display:block}
+.form-label{font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block}
+.form-input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .15s}
+.form-input:focus{border-color:var(--accent)}
+.color-picker{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.color-swatch{width:24px;height:24px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform .1s,border-color .15s}
+.color-swatch:hover{transform:scale(1.15)}
+.color-swatch.selected{border-color:var(--text);transform:scale(1.15)}
+.freq-select{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;margin:10px 0}
+.days-picker{display:flex;gap:4px;margin-bottom:10px;display:none}
+.days-picker.show{display:flex}
+.day-btn{width:32px;height:28px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-size:11px;font-weight:600;cursor:pointer;transition:background .15s}
+.day-btn.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+.form-actions{display:flex;gap:8px;margin-top:12px}
+.btn-add{padding:7px 16px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.btn-add:hover{opacity:.88}
+.btn-cancel{padding:7px 16px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer}
+.btn-cancel:hover{background:var(--border)}
+
+/* MAIN CONTENT */
+.main-content{flex:1;overflow-y:auto;padding:28px 32px;display:flex;flex-direction:column}
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-secondary);text-align:center;gap:12px}
+.empty-state h2{font-family:'Lora',serif;font-size:22px;font-weight:600;color:var(--text)}
+.empty-state p{font-family:'Lora',serif;font-size:15px;max-width:360px;line-height:1.6}
+
+/* HABIT DETAIL */
+.habit-detail{display:none}
+.habit-detail.show{display:block}
+.detail-header{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+.detail-dot{width:18px;height:18px;border-radius:50%}
+.detail-name{font-family:'Lora',serif;font-size:24px;font-weight:600}
+.detail-freq{font-size:13px;color:var(--text-secondary);margin-left:auto}
+.detail-pause-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;color:var(--text)}
+.detail-pause-btn:hover{background:var(--surface)}
+
+/* CALENDAR GRID */
+.calendar-section{margin-bottom:28px}
+.calendar-nav{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.calendar-nav button{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;color:var(--text);font-size:14px}
+.calendar-nav button:hover{background:var(--surface)}
+.calendar-month{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-day-header{text-align:center;font-size:11px;font-weight:600;color:var(--text-secondary);padding:4px 0}
+.cal-day{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;border:1px solid transparent;transition:background .15s;position:relative;color:var(--text)}
+.cal-day:hover{background:var(--surface)}
+.cal-day.outside{color:var(--text-secondary);opacity:.3;pointer-events:none}
+.cal-day.today{border-color:var(--accent);font-weight:700}
+.cal-day.completed{background:var(--accent);color:#fff;font-weight:600}
+.cal-day.completed:hover{opacity:.85}
+.cal-day.future{opacity:.4;pointer-events:none}
+
+/* STREAK STATS */
+.stats-row{display:flex;gap:16px;flex-wrap:wrap}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;min-width:140px}
+.stat-value{font-size:28px;font-weight:700;color:var(--accent);font-family:'DM Sans',sans-serif}
+.stat-label{font-size:12px;color:var(--text-secondary);margin-top:2px}
+
+/* STATUS BAR */
+.status-bar{height:var(--status-h);display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-top:1px solid var(--border);background:var(--surface);font-size:12px;color:var(--text-secondary)}
+
+/* BADGE */
+.badge{position:fixed;bottom:calc(var(--status-h) + 8px);right:12px;font-size:11px;color:var(--text-secondary);text-decoration:none;font-family:'DM Sans',sans-serif;opacity:.7;z-index:90}
+.badge:hover{opacity:1}
+
+/* OVERLAY */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:199}
+
+/* EDIT MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;width:360px;max-width:90vw}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:16px}
+.modal .form-label{margin-top:10px}
+
+@media(max-width:768px){
+  .hamburger{display:flex}
+  .sidebar{position:fixed;left:0;top:var(--header-h);bottom:var(--status-h);z-index:200;transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay.show{display:block}
+  .main-content{padding:20px 16px}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <button class="hamburger" id="hamburger" aria-label="Toggle sidebar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+    <span class="logo">freehabittracker.app</span>
+  </div>
+  <button class="theme-toggle" id="themeToggle">
+    <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    <span id="themeLabel">Dark</span>
+  </button>
+</header>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="sidebar-heading">My Habits</div>
+      <button class="btn-new-habit" id="btnNewHabit">+ New Habit</button>
+
+      <div class="new-habit-form" id="newHabitForm">
+        <label class="form-label">Name</label>
+        <input class="form-input" id="habitNameInput" placeholder="e.g., Exercise, Read 30 min, Meditate" maxlength="60">
+        <label class="form-label" style="margin-top:10px">Color</label>
+        <div class="color-picker" id="colorPicker"></div>
+        <label class="form-label">Frequency</label>
+        <select class="freq-select" id="freqSelect">
+          <option value="daily">Daily</option>
+          <option value="weekdays">Weekdays</option>
+          <option value="weekends">Weekends</option>
+          <option value="custom">Custom</option>
+        </select>
+        <div class="days-picker" id="daysPicker"></div>
+        <div class="form-actions">
+          <button class="btn-add" id="btnAddHabit">Add Habit</button>
+          <button class="btn-cancel" id="btnCancelHabit">Cancel</button>
+        </div>
+      </div>
+
+      <div class="habit-list" id="habitList"></div>
+
+      <div class="archived-section" id="archivedSection" style="display:none">
+        <button class="archived-toggle" id="archivedToggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          Archived
+        </button>
+        <div class="archived-list" id="archivedList"></div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <main class="main-content" id="mainContent">
+    <div class="empty-state" id="emptyState">
+      <h2>Welcome to your Habit Tracker</h2>
+      <p>Select a habit from the sidebar or create a new one to start tracking your progress.</p>
+    </div>
+    <div class="habit-detail" id="habitDetail">
+      <div class="detail-header">
+        <div class="detail-dot" id="detailDot"></div>
+        <div class="detail-name" id="detailName"></div>
+        <span class="detail-freq" id="detailFreq"></span>
+        <button class="detail-pause-btn" id="detailPauseBtn"></button>
+      </div>
+      <div class="calendar-section">
+        <div class="calendar-nav">
+          <button id="calPrev">◀</button>
+          <span class="calendar-month" id="calMonth"></span>
+          <button id="calNext">▶</button>
+        </div>
+        <div class="calendar-grid" id="calGrid"></div>
+      </div>
+      <div class="stats-row" id="statsRow"></div>
+    </div>
+  </main>
+</div>
+
+<div class="status-bar">
+  <span id="statusLeft">0 habits · 0 day streak</span>
+  <span>All data saved locally in your browser</span>
+</div>
+
+<a class="badge" href="https://freesuite.app" target="_blank" rel="noopener">by freesuite.app</a>
+
+<!-- Context Menu -->
+<div class="ctx-menu" id="ctxMenu" style="display:none"></div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h3>Edit Habit</h3>
+    <label class="form-label">Name</label>
+    <input class="form-input" id="editNameInput" maxlength="60">
+    <label class="form-label">Color</label>
+    <div class="color-picker" id="editColorPicker"></div>
+    <label class="form-label">Frequency</label>
+    <select class="freq-select" id="editFreqSelect">
+      <option value="daily">Daily</option>
+      <option value="weekdays">Weekdays</option>
+      <option value="weekends">Weekends</option>
+      <option value="custom">Custom</option>
+    </select>
+    <div class="days-picker" id="editDaysPicker"></div>
+    <div class="form-actions" style="margin-top:16px">
+      <button class="btn-add" id="btnSaveEdit">Save</button>
+      <button class="btn-cancel" id="btnCancelEdit">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+const COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e84393','#636e72','#C49A2A'];
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAY_LETTERS = ['S','M','T','W','T','F','S'];
+const STORAGE_KEY = 'habittracker_habits';
+const THEME_KEY = 'suite_theme';
+
+// --- State ---
+let habits = [];
+let selectedId = null;
+let calYear, calMonth;
+let editingId = null;
+
+// --- Theme ---
+function getTheme(){ return localStorage.getItem(THEME_KEY) || 'light' }
+function setTheme(t){
+  localStorage.setItem(THEME_KEY, t);
+  document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : '');
+  document.getElementById('themeLabel').textContent = t === 'dark' ? 'Light' : 'Dark';
+  const icon = document.getElementById('themeIcon');
+  icon.innerHTML = t === 'dark'
+    ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+    : '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+}
+setTheme(getTheme());
+document.getElementById('themeToggle').onclick = () => setTheme(getTheme() === 'dark' ? 'light' : 'dark');
+
+// --- Storage ---
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(habits)) }
+function load(){
+  try { habits = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [] } catch(e){ habits = [] }
+  if(!habits.length) loadDefaults();
+}
+function loadDefaults(){
+  const now = Date.now();
+  habits = [
+    { id: genId(), name:'Exercise', color:'#2ecc71', freq:'daily', days:[], paused:false, archived:false, completions:{}, created: now },
+    { id: genId(), name:'Read 30 min', color:'#3498db', freq:'daily', days:[], paused:false, archived:false, completions:{}, created: now+1 },
+    { id: genId(), name:'Meditate', color:'#9b59b6', freq:'daily', days:[], paused:false, archived:false, completions:{}, created: now+2 },
+  ];
+  save();
+}
+function genId(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36) }
+
+// --- Sidebar ---
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('sidebarOverlay');
+document.getElementById('hamburger').onclick = () => { sidebar.classList.toggle('open'); overlay.classList.toggle('show') };
+overlay.onclick = () => { sidebar.classList.remove('open'); overlay.classList.remove('show') };
+
+function renderSidebar(){
+  const list = document.getElementById('habitList');
+  const active = habits.filter(h => !h.archived);
+  const archived = habits.filter(h => h.archived);
+  list.innerHTML = '';
+  active.forEach(h => list.appendChild(makeHabitRow(h)));
+  const sec = document.getElementById('archivedSection');
+  sec.style.display = archived.length ? '' : 'none';
+  const aList = document.getElementById('archivedList');
+  aList.innerHTML = '';
+  archived.forEach(h => {
+    const row = makeHabitRow(h, true);
+    aList.appendChild(row);
+  });
+  updateStatus();
+}
+
+function makeHabitRow(h, isArchived){
+  const div = document.createElement('div');
+  div.className = 'habit-item' + (h.id === selectedId ? ' active' : '');
+  div.innerHTML = `<span class="habit-dot" style="background:${h.color}"></span>
+    <span class="habit-name">${esc(h.name)}</span>
+    <span class="habit-status">${h.paused ? 'paused' : ''}</span>
+    <button class="habit-menu-btn">⋯</button>`;
+  div.onclick = (e) => { if(!e.target.closest('.habit-menu-btn')){ selectHabit(h.id) }};
+  div.oncontextmenu = (e) => { e.preventDefault(); showCtx(e, h) };
+  div.querySelector('.habit-menu-btn').onclick = (e) => { e.stopPropagation(); showCtx(e, h) };
+  return div;
+}
+
+function selectHabit(id){
+  selectedId = id;
+  sidebar.classList.remove('open');
+  overlay.classList.remove('show');
+  renderSidebar();
+  renderDetail();
+}
+
+// --- Context Menu ---
+const ctxMenu = document.getElementById('ctxMenu');
+function showCtx(e, h){
+  ctxMenu.style.display = 'block';
+  ctxMenu.innerHTML = '';
+  if(!h.archived){
+    addCtxBtn('Edit', () => openEdit(h));
+    addCtxBtn('Archive', () => { h.archived = true; save(); if(selectedId===h.id){ selectedId=null } renderSidebar(); renderDetail() });
+  } else {
+    addCtxBtn('Restore', () => { h.archived = false; save(); renderSidebar(); renderDetail() });
+  }
+  addCtxBtn('Delete', () => { if(confirm('Delete "'+h.name+'"?')){ habits = habits.filter(x=>x.id!==h.id); save(); if(selectedId===h.id){selectedId=null} renderSidebar(); renderDetail() }}, true);
+  let x = e.clientX, y = e.clientY;
+  ctxMenu.style.left = Math.min(x, innerWidth - 160) + 'px';
+  ctxMenu.style.top = Math.min(y, innerHeight - 120) + 'px';
+}
+function addCtxBtn(label, fn, danger){
+  const btn = document.createElement('button');
+  btn.textContent = label;
+  if(danger) btn.className = 'danger';
+  btn.onclick = () => { ctxMenu.style.display = 'none'; fn() };
+  ctxMenu.appendChild(btn);
+}
+document.addEventListener('click', (e) => { if(!ctxMenu.contains(e.target)) ctxMenu.style.display = 'none' });
+
+// --- Archived Toggle ---
+const archivedToggle = document.getElementById('archivedToggle');
+const archivedList = document.getElementById('archivedList');
+archivedToggle.onclick = () => {
+  archivedToggle.classList.toggle('open');
+  archivedList.classList.toggle('show');
+};
+
+// --- New Habit Form ---
+const newForm = document.getElementById('newHabitForm');
+let newColor = COLORS[0];
+let newDays = [];
+
+function buildColorPicker(container, selected, onSelect){
+  container.innerHTML = '';
+  COLORS.forEach(c => {
+    const s = document.createElement('div');
+    s.className = 'color-swatch' + (c === selected ? ' selected' : '');
+    s.style.background = c;
+    s.onclick = () => { onSelect(c); container.querySelectorAll('.color-swatch').forEach(x=>x.classList.remove('selected')); s.classList.add('selected') };
+    container.appendChild(s);
+  });
+}
+
+function buildDaysPicker(container, selected, onToggle){
+  container.innerHTML = '';
+  DAY_LETTERS.forEach((d,i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'day-btn' + (selected.includes(i) ? ' selected' : '');
+    btn.textContent = d;
+    btn.onclick = () => { onToggle(i); btn.classList.toggle('selected') };
+    container.appendChild(btn);
+  });
+}
+
+buildColorPicker(document.getElementById('colorPicker'), newColor, c => newColor = c);
+buildDaysPicker(document.getElementById('daysPicker'), newDays, i => {
+  const idx = newDays.indexOf(i);
+  if(idx > -1) newDays.splice(idx,1); else newDays.push(i);
+});
+
+const freqSelect = document.getElementById('freqSelect');
+const daysPicker = document.getElementById('daysPicker');
+freqSelect.onchange = () => daysPicker.classList.toggle('show', freqSelect.value === 'custom');
+
+document.getElementById('btnNewHabit').onclick = () => {
+  newForm.classList.toggle('show');
+  if(newForm.classList.contains('show')) document.getElementById('habitNameInput').focus();
+};
+document.getElementById('btnCancelHabit').onclick = () => { newForm.classList.remove('show'); resetNewForm() };
+
+function resetNewForm(){
+  document.getElementById('habitNameInput').value = '';
+  newColor = COLORS[0];
+  newDays = [];
+  freqSelect.value = 'daily';
+  daysPicker.classList.remove('show');
+  buildColorPicker(document.getElementById('colorPicker'), newColor, c => newColor = c);
+  buildDaysPicker(document.getElementById('daysPicker'), newDays, i => {
+    const idx = newDays.indexOf(i);
+    if(idx > -1) newDays.splice(idx,1); else newDays.push(i);
+  });
+}
+
+document.getElementById('btnAddHabit').onclick = () => {
+  const name = document.getElementById('habitNameInput').value.trim();
+  if(!name) { document.getElementById('habitNameInput').focus(); return }
+  const freq = freqSelect.value;
+  let days = [];
+  if(freq === 'weekdays') days = [1,2,3,4,5];
+  else if(freq === 'weekends') days = [0,6];
+  else if(freq === 'custom') days = [...newDays].sort();
+  habits.push({ id: genId(), name, color: newColor, freq, days, paused: false, archived: false, completions: {}, created: Date.now() });
+  save();
+  newForm.classList.remove('show');
+  resetNewForm();
+  renderSidebar();
+};
+
+// --- Edit Modal ---
+let editColor = COLORS[0];
+let editDays = [];
+
+function openEdit(h){
+  editingId = h.id;
+  document.getElementById('editNameInput').value = h.name;
+  editColor = h.color;
+  editDays = [...(h.days || [])];
+  buildColorPicker(document.getElementById('editColorPicker'), editColor, c => editColor = c);
+  buildDaysPicker(document.getElementById('editDaysPicker'), editDays, i => {
+    const idx = editDays.indexOf(i);
+    if(idx > -1) editDays.splice(idx,1); else editDays.push(i);
+  });
+  const es = document.getElementById('editFreqSelect');
+  es.value = h.freq;
+  document.getElementById('editDaysPicker').classList.toggle('show', h.freq === 'custom');
+  es.onchange = () => document.getElementById('editDaysPicker').classList.toggle('show', es.value === 'custom');
+  document.getElementById('editModal').classList.add('show');
+}
+
+document.getElementById('btnCancelEdit').onclick = () => document.getElementById('editModal').classList.remove('show');
+document.getElementById('btnSaveEdit').onclick = () => {
+  const h = habits.find(x => x.id === editingId);
+  if(!h) return;
+  const name = document.getElementById('editNameInput').value.trim();
+  if(!name) return;
+  h.name = name;
+  h.color = editColor;
+  h.freq = document.getElementById('editFreqSelect').value;
+  if(h.freq === 'weekdays') h.days = [1,2,3,4,5];
+  else if(h.freq === 'weekends') h.days = [0,6];
+  else if(h.freq === 'custom') h.days = [...editDays].sort();
+  else h.days = [];
+  save();
+  document.getElementById('editModal').classList.remove('show');
+  renderSidebar();
+  renderDetail();
+};
+
+// --- Detail View ---
+function renderDetail(){
+  const emptyState = document.getElementById('emptyState');
+  const detail = document.getElementById('habitDetail');
+  const h = habits.find(x => x.id === selectedId);
+  if(!h){
+    emptyState.style.display = '';
+    detail.classList.remove('show');
+    return;
+  }
+  emptyState.style.display = 'none';
+  detail.classList.add('show');
+  document.getElementById('detailDot').style.background = h.color;
+  document.getElementById('detailName').textContent = h.name;
+  document.getElementById('detailFreq').textContent = freqLabel(h);
+  const pauseBtn = document.getElementById('detailPauseBtn');
+  pauseBtn.textContent = h.paused ? '▶ Resume' : '⏸ Pause';
+  pauseBtn.onclick = () => { h.paused = !h.paused; save(); renderSidebar(); renderDetail() };
+  renderCalendar(h);
+  renderStats(h);
+}
+
+function freqLabel(h){
+  if(h.freq==='daily') return 'Daily';
+  if(h.freq==='weekdays') return 'Weekdays';
+  if(h.freq==='weekends') return 'Weekends';
+  return h.days.map(d => DAYS[d]).join(', ');
+}
+
+// --- Calendar ---
+function renderCalendar(h){
+  const now = new Date();
+  if(calYear == null){ calYear = now.getFullYear(); calMonth = now.getMonth() }
+  document.getElementById('calMonth').textContent = new Date(calYear, calMonth).toLocaleString('default',{month:'long',year:'numeric'});
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  DAY_LETTERS.forEach(d => {
+    const hd = document.createElement('div');
+    hd.className = 'cal-day-header';
+    hd.textContent = d;
+    grid.appendChild(hd);
+  });
+  const first = new Date(calYear, calMonth, 1);
+  const startDay = first.getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const today = new Date(); today.setHours(0,0,0,0);
+  // prev month padding
+  const prevDays = new Date(calYear, calMonth, 0).getDate();
+  for(let i = startDay - 1; i >= 0; i--){
+    const d = document.createElement('div');
+    d.className = 'cal-day outside';
+    d.textContent = prevDays - i;
+    grid.appendChild(d);
+  }
+  for(let day = 1; day <= daysInMonth; day++){
+    const d = document.createElement('div');
+    const date = new Date(calYear, calMonth, day);
+    const key = dateKey(date);
+    const isFuture = date > today;
+    const isToday = date.getTime() === today.getTime();
+    const done = h.completions[key];
+    d.className = 'cal-day' + (done ? ' completed' : '') + (isToday ? ' today' : '') + (isFuture ? ' future' : '');
+    d.textContent = day;
+    if(!isFuture){
+      d.onclick = () => {
+        if(h.completions[key]) delete h.completions[key];
+        else h.completions[key] = true;
+        save(); renderCalendar(h); renderStats(h); updateStatus();
+      };
+    }
+    grid.appendChild(d);
+  }
+  // next month padding
+  const total = startDay + daysInMonth;
+  const remaining = (7 - total % 7) % 7;
+  for(let i = 1; i <= remaining; i++){
+    const d = document.createElement('div');
+    d.className = 'cal-day outside';
+    d.textContent = i;
+    grid.appendChild(d);
+  }
+}
+
+document.getElementById('calPrev').onclick = () => { calMonth--; if(calMonth<0){calMonth=11;calYear--} const h=habits.find(x=>x.id===selectedId); if(h) renderCalendar(h) };
+document.getElementById('calNext').onclick = () => { calMonth++; if(calMonth>11){calMonth=0;calYear++} const h=habits.find(x=>x.id===selectedId); if(h) renderCalendar(h) };
+
+function dateKey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0') }
+
+// --- Stats ---
+function renderStats(h){
+  const row = document.getElementById('statsRow');
+  const total = Object.keys(h.completions).length;
+  const streak = calcStreak(h);
+  const thisMonth = Object.keys(h.completions).filter(k => k.startsWith(calYear+'-'+String(calMonth+1).padStart(2,'0'))).length;
+  row.innerHTML = `
+    <div class="stat-card"><div class="stat-value">${streak}</div><div class="stat-label">Current Streak</div></div>
+    <div class="stat-card"><div class="stat-value">${thisMonth}</div><div class="stat-label">This Month</div></div>
+    <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">Total Completions</div></div>`;
+}
+
+function calcStreak(h){
+  let streak = 0;
+  const today = new Date(); today.setHours(0,0,0,0);
+  let d = new Date(today);
+  // If today is not completed, start from yesterday
+  if(!h.completions[dateKey(d)]){ d.setDate(d.getDate()-1) }
+  while(h.completions[dateKey(d)]){
+    streak++;
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
+
+function calcMaxStreak(){
+  let max = 0;
+  habits.filter(h => !h.archived && !h.paused).forEach(h => {
+    const s = calcStreak(h);
+    if(s > max) max = s;
+  });
+  return max;
+}
+
+// --- Status Bar ---
+function updateStatus(){
+  const active = habits.filter(h => !h.archived).length;
+  const streak = calcMaxStreak();
+  document.getElementById('statusLeft').textContent = `${active} habit${active!==1?'s':''} · ${streak} day streak`;
+}
+
+// --- Escape HTML ---
+function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML }
+
+// --- Init ---
+load();
+renderSidebar();
+renderDetail();
+
+// --- Service Worker ---
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+}
+
+})();
+</script>
+</body>
+</html>
