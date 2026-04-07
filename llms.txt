@@ -1,0 +1,56 @@
+# freehabittracker.app
+
+> Free online habit tracker with streaks, heatmaps, and stats. No login required. All data stays private in your browser.
+
+## Summary
+
+freehabittracker.app is a free, privacy-first habit tracking web app. It runs entirely in the browser as a single-page application with zero server dependencies. All user data is stored in localStorage — nothing is ever sent to a server.
+
+## Key Facts
+
+- URL: https://freehabittracker.app/
+- Cost: Free (optional premium at $2.88/mo for cloud sync and charts)
+- Account required: No
+- Data storage: Browser localStorage only
+- Server/database: None
+- Tracking/analytics: None
+- Cookies: None
+- Works offline: Yes (Progressive Web App)
+- Mobile support: Fully responsive with dedicated mobile layout
+
+## Features
+
+- Unlimited habit tracking with custom names, colors, and frequencies
+- Frequency options: daily, weekdays, weekends, or custom days
+- Today view: clean daily checklist with large checkable cards
+- Monthly calendar grid showing completion status per day
+- Yearly heatmap (GitHub-style contribution graph, 365 days)
+- Streak tracking: current streak, best streak per habit and globally
+- Stats dashboard: completion rate, total check-ins, streaks
+- Daily notes attached to any date
+- Drag-to-reorder habits in sidebar
+- Archive/unarchive habits without losing history
+- Export all data as JSON backup
+- Import JSON to restore data
+- Daily reminder with browser tab indicator
+- Dark mode support
+- Works on desktop and mobile
+
+## Tech Stack
+
+- Single HTML file, no build step
+- Vanilla JavaScript (no frameworks)
+- CSS with custom properties for theming
+- DM Sans + Lora fonts (Google Fonts)
+- localStorage for persistence
+- Service Worker for offline support
+
+## Data Structure
+
+Data is stored in two localStorage keys:
+- `habittracker_habits`: array of habit objects with completions
+- `habit_data`: shared structure with completions indexed by date, plus daily notes
+
+## Privacy
+
+Zero data collection. No server endpoints, no cookies, no analytics, no tracking pixels, no fingerprinting. The app cannot identify users. Clearing browser data permanently deletes all habit data since there is no server backup.
