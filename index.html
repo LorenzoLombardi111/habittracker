@@ -16,6 +16,7 @@
 <meta name="twitter:title" content="Free Habit Tracker — Track Daily Habits Online, No Login">
 <meta name="twitter:description" content="Build better habits with streaks, heatmaps, and daily tracking. No sign-up. 100% private.">
 <meta name="twitter:image" content="https://freehabittracker.app/og-image.svg">
+<meta name="theme-color" content="#C49A2A">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -1072,7 +1073,7 @@ function syncHabitDataFromHabits(){
   data.habits = habits.map(h => ({
     id: h.id, name: h.name, color: h.color,
     frequency: h.freq === 'custom' ? h.days.map(d=>DAYS[d]).join(',') : h.freq,
-    archived: h.archived, createdAt: new Date(h.created).toISOString().slice(0,10)
+    archived: h.archived, createdAt: h.created ? new Date(h.created).toISOString().slice(0,10) : '2026-01-01'
   }));
   // Merge per-habit completions into the shared completions structure
   habits.forEach(h => {
@@ -1392,7 +1393,8 @@ function renderDashboard(){
       const isFuture = date > today;
       const comps = data.completions[key] || {};
       const done = !!comps[h.id];
-      if(!isFuture){ habitTotal++; if(done) habitDone++ }
+      const scheduled = isHabitScheduled(h, date);
+      if(!isFuture && scheduled){ habitTotal++; if(done) habitDone++ }
 
       const cell = document.createElement('div');
       cell.className = 'dash-cell dash-day-cell' + (isFuture ? ' future' : '') + (d === todayDay ? ' today-col' : '');
@@ -1441,12 +1443,13 @@ function renderDashboard(){
     const key = dateKey(date);
     const isFuture = date > today;
     const comps = data.completions[key] || {};
+    const scheduled = activeHabits.filter(h => isHabitScheduled(h, date));
     let dayDone = 0;
-    activeHabits.forEach(h => { if(comps[h.id]) dayDone++ });
-    if(!isFuture){ totalAllDone += dayDone; totalAllPossible += activeHabits.length }
+    scheduled.forEach(h => { if(comps[h.id]) dayDone++ });
+    if(!isFuture){ totalAllDone += dayDone; totalAllPossible += scheduled.length }
     const sCell = document.createElement('div');
     sCell.className = 'dash-cell dash-score-cell' + (d === todayDay ? ' today-col' : '');
-    sCell.textContent = isFuture ? '' : (activeHabits.length > 0 ? dayDone + '/' + activeHabits.length : '');
+    sCell.textContent = isFuture ? '' : (scheduled.length > 0 ? dayDone + '/' + scheduled.length : '');
     grid.appendChild(sCell);
   }
   const totalCell = document.createElement('div');
@@ -1899,17 +1902,19 @@ function calcHabitStreak(h){
   let streak = 0;
   const today = new Date(); today.setHours(0,0,0,0);
   let d = new Date(today);
+  const createdDate = h.created ? new Date(h.created) : new Date(0);
+  createdDate.setHours(0,0,0,0);
   // Skip today if not completed (give benefit of the doubt)
   if(!h.completions[dateKey(d)]){ d.setDate(d.getDate()-1) }
-  while(true){
+  let safety = 1500;
+  while(safety-- > 0){
     const key = dateKey(d);
     if(isHabitScheduled(h, d)){
       if(h.completions[key]) streak++;
       else break;
     }
     d.setDate(d.getDate()-1);
-    // Don't go before habit creation
-    if(d < new Date(h.created)){ break }
+    if(d < createdDate) break;
   }
   return streak;
 }
@@ -2158,7 +2163,14 @@ document.getElementById('importFileInput').onchange = (e) => {
     try {
       const data = JSON.parse(ev.target.result);
       if(data.habits && Array.isArray(data.habits)){
-        habits = data.habits;
+        habits = data.habits.map(h => ({
+          ...h,
+          created: h.created || Date.now(),
+          completions: h.completions || {},
+          days: h.days || [],
+          paused: !!h.paused,
+          archived: !!h.archived
+        }));
         save();
       }
       if(data.habit_data){
@@ -2303,7 +2315,7 @@ if('serviceWorker' in navigator){
 
 <h1>Free Habit Tracker Online — Build Better Habits, No Login</h1>
 
-<h2>What features does freehabittracker.app offer?</h2>
+<h2 id="features">What features does freehabittracker.app offer?</h2>
 <p>freehabittracker.app is a full-featured habit tracking tool that runs entirely in your browser. Create unlimited habits with custom names, colors, and frequency schedules — daily, weekdays only, weekends only, or pick specific days of the week. Each habit tracks a current streak and best-ever streak automatically. The Today view gives you a clean checklist of what needs doing, while the monthly calendar shows completion status for every day at a glance. A yearly heatmap — inspired by GitHub's contribution graph — visualizes your consistency across 365 days with color-coded intensity levels. The stats dashboard calculates current streak, best streak, monthly completion rate, and total check-ins in real time. Attach daily notes to any day to journal alongside your habits. When you need your data, export everything as a JSON file and import it on another device. Every feature works with zero sign-up, zero server calls, and zero cost.</p>
 
 <h2>How does habit tracking help build better habits?</h2>
@@ -2318,7 +2330,7 @@ if('serviceWorker' in navigator){
 <h2>Is freehabittracker.app private and safe?</h2>
 <p>Your habit data never leaves your device. freehabittracker.app stores everything in your browser's localStorage — a private storage area that only this website can access. There is no database, no server endpoint, and no API that receives your data. No cookies are set, no fingerprinting occurs, and no analytics or tracking scripts are loaded. The app does not know who you are, what habits you track, or how often you visit. If you clear your browser data, your habits are erased completely — because there is no backup on any server. For users who want a safety net, the Export button downloads a full JSON backup to your device that you control. The app is also a Progressive Web App, meaning it can be installed on your home screen and works fully offline with no network connection required. Your habits are your business, and freehabittracker.app keeps it that way.</p>
 
-<h2 style="margin-top:40px">Frequently Asked Questions</h2>
+<h2 id="faq" style="margin-top:40px">Frequently Asked Questions</h2>
 
 <details>
 <summary>Is freehabittracker.app really free?</summary>
