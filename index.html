@@ -132,25 +132,67 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .view-tab:hover{color:var(--text)}
 .view-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 
+/* CHECK ANIMATION */
+@keyframes checkPulse{
+  0%{transform:scale(1)}
+  30%{transform:scale(1.15)}
+  60%{transform:scale(0.95)}
+  100%{transform:scale(1)}
+}
+@keyframes checkBg{
+  0%{background-color:var(--surface)}
+  30%{background-color:color-mix(in srgb, #2ecc71 18%, var(--surface))}
+  100%{background-color:color-mix(in srgb, #2ecc71 8%, var(--surface))}
+}
+@keyframes cbFill{
+  0%{transform:scale(0);opacity:0}
+  50%{transform:scale(1.2);opacity:1}
+  100%{transform:scale(1);opacity:1}
+}
+.today-card.anim-check{animation:checkBg .45s ease}
+.today-card.anim-check .today-cb{animation:checkPulse .35s ease}
+.day-habit-row.anim-check{animation:checkBg .4s ease}
+.day-habit-row.anim-check .day-habit-cb{animation:checkPulse .35s ease}
+
 /* TODAY VIEW */
 .today-view{display:none;flex-direction:column;gap:16px}
 .today-view.show{display:flex}
 .today-progress{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--text-secondary);padding:4px 0}
 .today-progress b{color:var(--accent);font-weight:700}
 .today-cards{display:flex;flex-direction:column;gap:10px}
-.today-card{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:background .15s,border-color .15s}
+.today-card{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:background .2s,border-color .2s,transform .15s}
 .today-card:hover{border-color:var(--text-secondary)}
+.today-card:active{transform:scale(0.98)}
 .today-card.checked{background:color-mix(in srgb, #2ecc71 8%, var(--surface));border-color:color-mix(in srgb, #2ecc71 25%, var(--border))}
-.today-cb{width:24px;height:24px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;color:#fff;transition:background .15s,border-color .15s}
+.today-cb{width:24px;height:24px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;color:#fff;transition:background .2s,border-color .2s,transform .15s}
 .today-card.checked .today-cb{background:#2ecc71;border-color:#2ecc71}
 .today-card-body{flex:1;min-width:0}
-.today-card-name{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;transition:color .15s}
+.today-card-name{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;transition:color .2s,text-decoration .2s}
 .today-card.checked .today-card-name{text-decoration:line-through;color:var(--text-secondary)}
 .today-card-streak{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text-secondary);margin-top:2px}
 .today-note{margin-top:8px}
 .today-note label{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px}
 .today-note textarea{width:100%;min-height:60px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;resize:vertical;outline:none;transition:border-color .15s}
 .today-note textarea:focus{border-color:var(--accent)}
+
+/* SIDEBAR FOOTER */
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.sidebar-footer-row{display:flex;gap:6px}
+.sb-btn{flex:1;padding:7px 0;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--text-secondary);cursor:pointer;text-align:center;transition:background .15s}
+.sb-btn:hover{background:var(--border)}
+.reminder-row{display:flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--text-secondary)}
+.reminder-row label{font-weight:600}
+.reminder-input{padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:'DM Sans',sans-serif;font-size:11px;width:70px;outline:none}
+.reminder-input:focus{border-color:var(--accent)}
+#upgrade-prompt{padding:14px 16px;border-top:1px solid var(--border);flex-shrink:0}
+#upgrade-prompt .up-title{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px}
+#upgrade-prompt .up-desc{font-family:'DM Sans',sans-serif;font-size:11px;color:var(--text-secondary);line-height:1.5;margin-bottom:6px}
+#upgrade-prompt .up-cta{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--accent)}
+#upgrade-prompt .up-cta:hover{text-decoration:underline}
+
+/* EMPTY STATE IMPROVED */
+.empty-state-arrow{font-size:28px;margin-top:8px;color:var(--accent);animation:pointLeft 1.5s ease infinite}
+@keyframes pointLeft{0%,100%{transform:translateX(0)}50%{transform:translateX(-8px)}}
 
 /* BOTTOM NAV (mobile only) */
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--surface);border-top:1px solid var(--border);z-index:100;justify-content:space-around;align-items:center}
@@ -312,6 +354,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
   .stat-card{padding:12px 14px;min-width:110px}
   .stat-value{font-size:22px}
   .day-detail{display:none !important}
+  .today-card{padding:14px}
+  .today-cb{width:22px;height:22px}
+  .empty-state-arrow{transform:rotate(90deg)}
+  @keyframes pointLeft{0%,100%{transform:rotate(90deg) translateX(0)}50%{transform:rotate(90deg) translateX(-8px)}}
 }
 </style>
 </head>
@@ -364,6 +410,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
         </button>
         <div class="archived-list" id="archivedList"></div>
       </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-row">
+        <button class="sb-btn" id="btnExport">Export Data</button>
+        <button class="sb-btn" id="btnImport">Import Data</button>
+      </div>
+      <div class="reminder-row">
+        <label>Daily reminder:</label>
+        <input type="time" class="reminder-input" id="reminderTime" value="">
+        <button class="sb-btn" id="btnClearReminder" style="flex:0;padding:4px 8px;font-size:10px">Clear</button>
+      </div>
+      <input type="file" id="importFileInput" accept=".json" style="display:none">
+    </div>
+    <div id="upgrade-prompt">
+      <div class="up-title">&#128274; Cloud Sync &amp; Charts</div>
+      <div class="up-desc">Sync habits across devices, view weekly/monthly charts, set reminders</div>
+      <a class="up-cta" href="https://freesuite.app" target="_blank" rel="noopener">Unlock with freesuite.app · $2.88/mo</a>
     </div>
   </aside>
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -431,7 +494,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
     </div>
     <div class="empty-state" id="emptyState" style="display:none">
       <h2>Welcome to your Habit Tracker</h2>
-      <p>Select a habit from the sidebar or create a new one to start tracking your progress.</p>
+      <p>Start by adding your first habit from the sidebar and build a streak!</p>
+      <div class="empty-state-arrow">&#8592;</div>
     </div>
     <div class="habit-detail" id="habitDetail">
       <div class="detail-header">
@@ -1086,12 +1150,15 @@ function renderDayHabitList(dateStr){
     row.onclick = () => {
       const newDone = !getCompletionForDate(dateStr)[h.id];
       setCompletionForDate(dateStr, h.id, newDone);
+      if(newDone) animateCheck(row);
       renderDayHabitList(dateStr);
       renderPerHabitStats(dateStr);
       if(currentView === 'calendar') renderOverviewCalendar();
-      else renderHeatmap();
+      else if(currentView === 'heatmap') renderHeatmap();
+      else renderTodayView();
       updateStatus();
       ovSelectedDate = dateStr;
+      checkReminder();
     };
     list.appendChild(row);
   });
@@ -1206,8 +1273,10 @@ function renderTodayView(){
     card.onclick = () => {
       const newDone = !comps[h.id];
       setCompletionForDate(todayKey, h.id, newDone);
+      if(newDone) animateCheck(card);
       renderTodayView();
       updateStatus();
+      checkReminder();
     };
     container.appendChild(card);
   });
@@ -1254,12 +1323,14 @@ function renderBsHabitList(dateStr){
     row.onclick = () => {
       const newDone = !getCompletionForDate(dateStr)[h.id];
       setCompletionForDate(dateStr, h.id, newDone);
+      if(newDone) animateCheck(row);
       renderBsHabitList(dateStr);
       renderBsHabitStats(dateStr);
       if(currentView === 'calendar') renderOverviewCalendar();
       else if(currentView === 'heatmap') renderHeatmap();
       else if(currentView === 'today') renderTodayView();
       updateStatus();
+      checkReminder();
     };
     list.appendChild(row);
   });
@@ -1477,20 +1548,19 @@ function hideHmTooltip(){
 
 // --- Detail View ---
 function renderDetail(){
-  const emptyState = document.getElementById('emptyState');
   const detail = document.getElementById('habitDetail');
   const wrapper = document.getElementById('overviewWrapper');
   const h = habits.find(x => x.id === selectedId);
   if(!h){
-    emptyState.style.display = 'none';
     detail.classList.remove('show');
+    if(checkEmptyState()) return;
     wrapper.style.display = '';
     if(currentView === 'today') renderTodayView();
     else if(currentView === 'calendar') renderOverviewCalendar();
     else renderHeatmap();
     return;
   }
-  emptyState.style.display = 'none';
+  document.getElementById('emptyState').style.display = 'none';
   wrapper.style.display = 'none';
   detail.classList.add('show');
   document.getElementById('detailDot').style.background = h.color;
@@ -1810,6 +1880,147 @@ function updateStatus(){
 // --- Escape HTML ---
 function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML }
 
+// --- Check Animation Helper ---
+function animateCheck(el){
+  el.classList.add('anim-check');
+  el.addEventListener('animationend', () => el.classList.remove('anim-check'), { once: true });
+}
+
+// --- Export / Import ---
+document.getElementById('btnExport').onclick = () => {
+  const data = {
+    habits: habits,
+    habit_data: loadHabitData(),
+    exported_at: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'habittracker-backup-' + dateKey(new Date()) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+document.getElementById('btnImport').onclick = () => {
+  document.getElementById('importFileInput').click();
+};
+
+document.getElementById('importFileInput').onchange = (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if(data.habits && Array.isArray(data.habits)){
+        habits = data.habits;
+        save();
+      }
+      if(data.habit_data){
+        saveHabitData(data.habit_data);
+      }
+      syncHabitDataFromHabits();
+      renderSidebar();
+      renderDetail();
+      if(currentView === 'today') renderTodayView();
+      else if(currentView === 'calendar') renderOverviewCalendar();
+      else renderHeatmap();
+      alert('Data imported successfully!');
+    } catch(err){
+      alert('Invalid file. Please select a valid habit tracker JSON backup.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+};
+
+// --- Daily Reminder (tab indicator) ---
+const REMINDER_KEY = 'habittracker_reminder';
+const origTitle = document.title;
+const origFavicon = document.querySelector('link[rel="icon"]').href;
+let reminderInterval = null;
+let reminderActive = false;
+
+function loadReminder(){ return localStorage.getItem(REMINDER_KEY) || '' }
+function saveReminder(t){ localStorage.setItem(REMINDER_KEY, t) }
+
+document.getElementById('reminderTime').value = loadReminder();
+
+document.getElementById('reminderTime').onchange = (e) => {
+  saveReminder(e.target.value);
+  startReminderCheck();
+};
+
+document.getElementById('btnClearReminder').onclick = () => {
+  document.getElementById('reminderTime').value = '';
+  saveReminder('');
+  clearReminderIndicator();
+  startReminderCheck();
+};
+
+function startReminderCheck(){
+  if(reminderInterval) clearInterval(reminderInterval);
+  const time = loadReminder();
+  if(!time) return;
+  reminderInterval = setInterval(checkReminder, 30000);
+  checkReminder();
+}
+
+function checkReminder(){
+  const time = loadReminder();
+  if(!time) return;
+  const now = new Date();
+  const [rh, rm] = time.split(':').map(Number);
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const remMins = rh * 60 + rm;
+  // Show indicator if reminder time has passed and not all habits done
+  if(nowMins >= remMins){
+    const todayKey = dateKey(now);
+    const activeHabits = habits.filter(h => !h.archived && !h.paused);
+    const data = loadHabitData();
+    const comps = data.completions[todayKey] || {};
+    let allDone = activeHabits.length > 0 && activeHabits.every(h => comps[h.id]);
+    if(!allDone && activeHabits.length > 0){
+      setReminderIndicator();
+    } else {
+      clearReminderIndicator();
+    }
+  }
+}
+
+function setReminderIndicator(){
+  if(reminderActive) return;
+  reminderActive = true;
+  document.title = '\u23F0 ' + origTitle;
+  const link = document.querySelector('link[rel="icon"]');
+  link.href = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>\u23F0</text></svg>";
+}
+
+function clearReminderIndicator(){
+  if(!reminderActive) return;
+  reminderActive = false;
+  document.title = origTitle;
+  const link = document.querySelector('link[rel="icon"]');
+  link.href = origFavicon;
+}
+
+// --- Empty state logic ---
+function checkEmptyState(){
+  const activeHabits = habits.filter(h => !h.archived);
+  const emptyState = document.getElementById('emptyState');
+  const wrapper = document.getElementById('overviewWrapper');
+  const detail = document.getElementById('habitDetail');
+  if(activeHabits.length === 0 && !selectedId){
+    emptyState.style.display = '';
+    wrapper.style.display = 'none';
+    detail.classList.remove('show');
+    return true;
+  }
+  emptyState.style.display = 'none';
+  return false;
+}
+
 // --- Init ---
 load();
 syncHabitDataFromHabits();
@@ -1824,6 +2035,7 @@ if(isMobile()){
   switchView('calendar');
 }
 renderDetail();
+startReminderCheck();
 
 // --- Service Worker ---
 if('serviceWorker' in navigator){
