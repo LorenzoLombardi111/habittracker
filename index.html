@@ -522,8 +522,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
   <main class="main-content" id="mainContent">
+    <div id="overviewWrapper">
+      <div class="global-stats" id="globalStats">
+        <div class="gs-card"><div class="gs-value" id="gsStreak">0</div><div class="gs-label">Current Streak</div></div>
+        <div class="gs-card"><div class="gs-value" id="gsBestStreak">0</div><div class="gs-label">Best Streak</div></div>
+        <div class="gs-card"><div class="gs-value" id="gsMonthRate">0%</div><div class="gs-label">This Month</div></div>
+        <div class="gs-card"><div class="gs-value" id="gsTotalCheckins">0</div><div class="gs-label">Total Check-ins</div></div>
+      </div>
+      <div class="view-tabs">
+        <button class="view-tab active" id="tabDashboard">Dashboard</button>
+        <button class="view-tab" id="tabCalendar">Calendar</button>
+        <button class="view-tab" id="tabHeatmap">Heatmap</button>
+      </div>
     <div class="dashboard-view" id="dashboardView">
-      <div class="global-stats" id="globalStatsDash"></div>
       <div class="dash-nav">
         <button id="dashPrev">←</button>
         <span class="dash-title" id="dashTitle"></span>
@@ -534,17 +545,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
         <div class="dash-grid" id="dashGrid"></div>
       </div>
     </div>
-    <div id="overviewWrapper">
-      <div class="global-stats" id="globalStats">
-        <div class="gs-card"><div class="gs-value" id="gsStreak">0</div><div class="gs-label">Current Streak</div></div>
-        <div class="gs-card"><div class="gs-value" id="gsBestStreak">0</div><div class="gs-label">Best Streak</div></div>
-        <div class="gs-card"><div class="gs-value" id="gsMonthRate">0%</div><div class="gs-label">This Month</div></div>
-        <div class="gs-card"><div class="gs-value" id="gsTotalCheckins">0</div><div class="gs-label">Total Check-ins</div></div>
-      </div>
-      <div class="view-tabs">
-        <button class="view-tab active" id="tabCalendar">Calendar</button>
-        <button class="view-tab" id="tabHeatmap">Heatmap</button>
-      </div>
     <div class="today-view" id="todayView">
       <div class="today-progress" id="todayProgress"></div>
       <div class="today-cards" id="todayCards"></div>
@@ -844,8 +844,6 @@ function selectHabit(id){
     selectedId = null;
   } else {
     selectedId = id;
-    // Exit dashboard mode when selecting a habit
-    if(currentView === 'dashboard') currentView = 'calendar';
   }
   sidebar.classList.remove('open');
   overlay.classList.remove('show');
@@ -1304,7 +1302,8 @@ document.getElementById('ovCalToday').onclick = () => {
 };
 
 // --- View Tabs ---
-let currentView = 'calendar';
+let currentView = 'dashboard';
+const tabDashboard = document.getElementById('tabDashboard');
 const tabCalendar = document.getElementById('tabCalendar');
 const tabHeatmap = document.getElementById('tabHeatmap');
 const dashboardViewEl = document.getElementById('dashboardView');
@@ -1318,20 +1317,13 @@ function isMobile(){ return window.innerWidth <= 768 }
 function switchView(view){
   currentView = view;
   const isDash = view === 'dashboard';
-  // Desktop tabs — dashboard has no tab, it's a sidebar button
+  // Desktop tabs
+  tabDashboard.classList.toggle('active', isDash);
   tabCalendar.classList.toggle('active', view === 'calendar');
   tabHeatmap.classList.toggle('active', view === 'heatmap');
   btnDashboard.classList.toggle('active', isDash);
-  // When dashboard is active, hide the overviewWrapper (tabs+calendar+heatmap), show dashboard
-  const wrapper = document.getElementById('overviewWrapper');
-  if(isDash){
-    wrapper.style.display = 'none';
-    dashboardViewEl.style.display = 'flex';
-  } else {
-    wrapper.style.display = '';
-    dashboardViewEl.style.display = 'none';
-  }
-  // Sub-views inside overviewWrapper
+  // Toggle sub-views inside overviewWrapper
+  dashboardViewEl.style.display = isDash ? 'flex' : 'none';
   todayViewEl.style.display = view === 'today' ? 'flex' : 'none';
   calendarView.style.display = view === 'calendar' ? '' : 'none';
   heatmapViewEl.style.display = view === 'heatmap' ? 'flex' : 'none';
@@ -1364,6 +1356,7 @@ btnDashboard.onclick = () => {
   sidebar.classList.remove('open');
   overlay.classList.remove('show');
 };
+tabDashboard.onclick = () => switchView('dashboard');
 tabCalendar.onclick = () => switchView('calendar');
 tabHeatmap.onclick = () => switchView('heatmap');
 
@@ -1386,8 +1379,6 @@ function renderDashboard(){
   syncHabitDataFromHabits();
   renderGlobalStats();
   // Copy stats into dashboard's own stats container
-  const dashStats = document.getElementById('globalStatsDash');
-  dashStats.innerHTML = document.getElementById('globalStats').innerHTML;
   const data = loadHabitData();
   const activeHabits = habits.filter(h => !h.archived && !h.paused);
   const daysInMonth = new Date(dashYear, dashMonth + 1, 0).getDate();
@@ -1854,23 +1845,12 @@ function renderDetail(){
   if(!h){
     detail.classList.remove('show');
     if(checkEmptyState()) return;
-    if(currentView === 'dashboard'){
-      wrapper.style.display = 'none';
-      dashboardViewEl.style.display = 'flex';
-      renderDashboard();
-    } else {
-      wrapper.style.display = '';
-      dashboardViewEl.style.display = 'none';
-      if(currentView === 'today') renderTodayView();
-      else if(currentView === 'calendar') renderOverviewCalendar();
-      else renderHeatmap();
-    }
+    wrapper.style.display = '';
+    switchView(currentView);
     return;
   }
   document.getElementById('emptyState').style.display = 'none';
   wrapper.style.display = 'none';
-  dashboardViewEl.style.display = 'none';
-  btnDashboard.classList.remove('active');
   detail.classList.add('show');
   document.getElementById('detailDot').style.background = h.color;
   document.getElementById('detailName').textContent = h.name;
@@ -2332,7 +2312,6 @@ function checkEmptyState(){
   if(activeHabits.length === 0 && !selectedId){
     emptyState.style.display = '';
     wrapper.style.display = 'none';
-    dashboardViewEl.style.display = 'none';
     detail.classList.remove('show');
     return true;
   }
@@ -2347,9 +2326,9 @@ initOverviewCalendar();
 initDashMonth();
 todayViewEl.style.display = 'none';
 heatmapViewEl.style.display = 'none';
-dashboardViewEl.style.display = 'none';
+calendarView.style.display = 'none';
 renderSidebar();
-switchView('calendar');
+switchView('dashboard');
 renderDetail();
 startReminderCheck();
 
