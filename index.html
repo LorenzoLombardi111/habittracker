@@ -171,12 +171,45 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .hs-value{font-family:'DM Sans',sans-serif;font-size:18px;font-weight:700;color:var(--accent);line-height:1.1}
 .hs-label{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;text-transform:uppercase;color:var(--text-secondary);letter-spacing:.2px}
 
-/* DASHBOARD (consolidated view) */
-.dashboard-view{display:none;flex-direction:column;gap:1.5rem;overflow-y:auto}
+/* VIEW TABS (desktop) */
+.view-tabs{display:flex;gap:0;margin-bottom:18px;border-bottom:2px solid var(--border)}
+.view-tab{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;padding:8px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:color .15s,border-color .15s}
+.view-tab:hover{color:var(--text)}
+.view-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* DASHBOARD MATRIX */
+.dashboard-view{display:none;flex-direction:column;gap:0}
 .dashboard-view.show{display:flex}
-.dashboard-section{}
-.dashboard-section-label{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-secondary);margin-bottom:12px}
+.dash-nav{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.dash-nav button{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;cursor:pointer;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;transition:background .15s}
+.dash-nav button:hover{background:var(--surface)}
+.dash-title{font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;user-select:none}
+.dash-today-btn{font-size:12px;font-weight:600;color:var(--accent);border-color:var(--accent) !important}
+.dash-scroll{overflow-x:auto;position:relative;padding-bottom:6px}
+.dash-grid{display:grid;gap:0;width:max-content;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.dash-cell{display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;background:var(--bg);transition:background .12s;min-height:32px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.dash-cell:last-child{border-right:none}
+.dash-header{background:var(--surface);font-size:11px;font-weight:600;color:var(--text-secondary);position:sticky;top:0;z-index:2}
+.dash-header.today-col{color:var(--accent);background:color-mix(in srgb, var(--accent) 6%, var(--surface))}
+.dash-habit-label{position:sticky;left:0;z-index:3;background:var(--surface);justify-content:flex-start;gap:8px;padding:0 10px;font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:130px}
+.dash-habit-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dash-habit-label.header-corner{z-index:4;font-weight:600;color:var(--text-secondary)}
+.dash-day-cell{cursor:pointer;position:relative}
+.dash-day-cell:hover{background:var(--surface)}
+.dash-day-cell.future{opacity:.3;cursor:default}
+.dash-circle{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);transition:background .15s,border-color .15s,transform .15s}
+.dash-circle.filled{border:none}
+.dash-circle.anim{animation:checkPulse .35s ease}
+.dash-score-cell{background:var(--surface);font-size:10px;font-weight:600;color:var(--text-secondary)}
+.dash-score-cell.today-col{color:var(--accent)}
+.dash-monthly{position:sticky;right:0;z-index:2;background:var(--surface);flex-direction:column;gap:2px;padding:0 8px;min-width:60px}
+.dash-monthly-pct{font-size:11px;font-weight:700;color:var(--accent)}
+.dash-monthly-bar{width:40px;height:3px;border-radius:2px;background:var(--border);overflow:hidden}
+.dash-monthly-fill{height:100%;border-radius:2px;transition:width .2s}
+.dash-monthly.header-corner{z-index:4;font-weight:600;font-size:10px;color:var(--text-secondary)}
 .dash-tooltip{position:fixed;background:var(--text);color:var(--bg);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;padding:5px 9px;border-radius:5px;pointer-events:none;z-index:400;white-space:nowrap;opacity:0;transition:opacity .12s}
+.dash-tooltip.show{opacity:1}
+.dash-empty{padding:32px;text-align:center;color:var(--text-secondary);font-size:14px}
 .dash-tooltip.show{opacity:1}
 
 /* CHECK ANIMATION */
@@ -257,7 +290,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .bottom-sheet-handle{width:40px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 16px}
 
 /* HEATMAP */
-.heatmap-view{display:flex;flex-direction:column;gap:0}
+.heatmap-view{display:none;flex-direction:column;gap:0}
+.heatmap-view.show{display:flex}
 .heatmap-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:14px}
 .heatmap-filter{padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;cursor:pointer}
 .heatmap-filter:focus{border-color:var(--accent)}
@@ -387,6 +421,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
   .status-bar{display:none}
   .bottom-nav{display:flex}
   .badge{display:none}
+  .view-tabs{display:none}
   .global-stats{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
   .gs-card{padding:12px}
   .gs-value{font-size:22px}
@@ -401,7 +436,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
   .day-detail{display:none !important}
   .today-card{padding:14px}
   .today-cb{width:22px;height:22px}
-  .dashboard-section-label{font-size:12px;margin-bottom:10px}
+  .dash-cell{min-height:28px}
+  .dash-habit-label{min-width:100px;font-size:11px;padding:0 8px}
+  .dash-circle{width:14px;height:14px}
+  .dash-score-cell{font-size:9px}
+  .dash-monthly{min-width:52px;padding:0 6px}
+  .dash-monthly-pct{font-size:10px}
+  .dash-monthly-bar{width:32px}
   .empty-state-arrow{transform:rotate(90deg)}
   @keyframes pointLeft{0%,100%{transform:rotate(90deg) translateX(0)}50%{transform:rotate(90deg) translateX(-8px)}}
 }
@@ -481,62 +522,29 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
   <main class="main-content" id="mainContent">
-    <div class="dashboard-view" id="dashboardView">
+    <div id="overviewWrapper">
       <div class="global-stats" id="globalStats">
         <div class="gs-card"><div class="gs-value" id="gsStreak">0</div><div class="gs-label">Current Streak</div></div>
         <div class="gs-card"><div class="gs-value" id="gsBestStreak">0</div><div class="gs-label">Best Streak</div></div>
         <div class="gs-card"><div class="gs-value" id="gsMonthRate">0%</div><div class="gs-label">This Month</div></div>
         <div class="gs-card"><div class="gs-value" id="gsTotalCheckins">0</div><div class="gs-label">Total Check-ins</div></div>
       </div>
-
-      <div class="dashboard-section">
-        <div class="dashboard-section-label">Calendar</div>
-        <div class="overview-calendar" id="overviewCalendar">
-          <div class="ov-cal-header">
-            <button id="ovCalPrev">&larr;</button>
-            <span class="ov-cal-title" id="ovCalTitle"></span>
-            <button id="ovCalNext">&rarr;</button>
-            <button class="ov-cal-today" id="ovCalToday">Today</button>
-          </div>
-          <div class="ov-weekdays" id="ovWeekdays"></div>
-          <div class="ov-grid" id="ovGrid"></div>
-        </div>
-        <div class="day-detail" id="dayDetail">
-          <div class="day-detail-header">
-            <span class="day-detail-title" id="dayDetailTitle"></span>
-            <button class="day-detail-close" id="dayDetailClose">&cross;</button>
-          </div>
-          <div class="day-habit-list" id="dayHabitList"></div>
-          <div id="dayHabitStats"></div>
-          <div class="day-notes">
-            <label>Notes</label>
-            <textarea id="dayNotesInput" placeholder="Add a note for this day..."></textarea>
-          </div>
-        </div>
+      <div class="view-tabs">
+        <button class="view-tab active" id="tabDashboard">Dashboard</button>
+        <button class="view-tab" id="tabCalendar">Calendar</button>
+        <button class="view-tab" id="tabHeatmap">Heatmap</button>
       </div>
-
-      <div class="dashboard-section">
-        <div class="dashboard-section-label">Heatmap</div>
-        <div class="heatmap-view" id="heatmapView">
-          <div class="heatmap-toolbar">
-            <select class="heatmap-filter" id="heatmapFilter">
-              <option value="all">All Habits</option>
-            </select>
-          </div>
-          <div class="heatmap-wrap">
-            <div class="heatmap-container">
-              <div class="heatmap-months" id="heatmapMonths"></div>
-              <div class="heatmap-body">
-                <div class="heatmap-day-labels" id="heatmapDayLabels"></div>
-                <div class="heatmap-grid" id="heatmapGrid"></div>
-              </div>
-            </div>
-          </div>
-          <div class="heatmap-legend" id="heatmapLegend"></div>
-        </div>
+    <div class="dashboard-view" id="dashboardView">
+      <div class="dash-nav">
+        <button id="dashPrev">←</button>
+        <span class="dash-title" id="dashTitle"></span>
+        <button id="dashNext">→</button>
+        <button class="dash-today-btn" id="dashTodayBtn">Today</button>
+      </div>
+      <div class="dash-scroll" id="dashScroll">
+        <div class="dash-grid" id="dashGrid"></div>
       </div>
     </div>
-
     <div class="today-view" id="todayView">
       <div class="today-progress" id="todayProgress"></div>
       <div class="today-cards" id="todayCards"></div>
@@ -544,6 +552,46 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
         <label>How was today?</label>
         <textarea id="todayNoteInput" placeholder="Write a note about your day..."></textarea>
       </div>
+    </div>
+    <div class="overview-calendar" id="overviewCalendar">
+      <div class="ov-cal-header">
+        <button id="ovCalPrev">←</button>
+        <span class="ov-cal-title" id="ovCalTitle"></span>
+        <button id="ovCalNext">→</button>
+        <button class="ov-cal-today" id="ovCalToday">Today</button>
+      </div>
+      <div class="ov-weekdays" id="ovWeekdays"></div>
+      <div class="ov-grid" id="ovGrid"></div>
+    </div>
+    <div class="heatmap-view" id="heatmapView">
+      <div class="heatmap-toolbar">
+        <select class="heatmap-filter" id="heatmapFilter">
+          <option value="all">All Habits</option>
+        </select>
+      </div>
+      <div class="heatmap-wrap">
+        <div class="heatmap-container">
+          <div class="heatmap-months" id="heatmapMonths"></div>
+          <div class="heatmap-body">
+            <div class="heatmap-day-labels" id="heatmapDayLabels"></div>
+            <div class="heatmap-grid" id="heatmapGrid"></div>
+          </div>
+        </div>
+      </div>
+      <div class="heatmap-legend" id="heatmapLegend"></div>
+    </div>
+    <div class="day-detail" id="dayDetail">
+      <div class="day-detail-header">
+        <span class="day-detail-title" id="dayDetailTitle"></span>
+        <button class="day-detail-close" id="dayDetailClose">✕</button>
+      </div>
+      <div class="day-habit-list" id="dayHabitList"></div>
+      <div id="dayHabitStats"></div>
+      <div class="day-notes">
+        <label>Notes</label>
+        <textarea id="dayNotesInput" placeholder="Add a note for this day..."></textarea>
+      </div>
+    </div>
     </div>
     <div class="empty-state" id="emptyState" style="display:none">
       <h2>Welcome to your Habit Tracker</h2>
@@ -585,9 +633,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/></svg>
     <span>Dashboard</span>
   </button>
-  <button class="bnav-tab" id="bnavNotes">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-    <span>Notes</span>
+  <button class="bnav-tab" id="bnavCalendar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+    <span>Calendar</span>
+  </button>
+  <button class="bnav-tab" id="bnavHeatmap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Heatmap</span>
   </button>
 </nav>
 
@@ -1209,6 +1261,8 @@ function renderDayHabitList(dateStr){
       renderDayHabitList(dateStr);
       renderPerHabitStats(dateStr);
       if(currentView === 'dashboard') renderDashboard();
+      else if(currentView === 'calendar') renderOverviewCalendar();
+      else if(currentView === 'heatmap') renderHeatmap();
       else renderTodayView();
       updateStatus();
       ovSelectedDate = dateStr;
@@ -1247,9 +1301,14 @@ document.getElementById('ovCalToday').onclick = () => {
   renderOverviewCalendar();
 };
 
-// --- Views ---
+// --- View Tabs ---
 let currentView = 'dashboard';
+const tabDashboard = document.getElementById('tabDashboard');
+const tabCalendar = document.getElementById('tabCalendar');
+const tabHeatmap = document.getElementById('tabHeatmap');
 const dashboardViewEl = document.getElementById('dashboardView');
+const calendarView = document.getElementById('overviewCalendar');
+const heatmapViewEl = document.getElementById('heatmapView');
 const todayViewEl = document.getElementById('todayView');
 const btnDashboard = document.getElementById('btnDashboard');
 
@@ -1258,15 +1317,21 @@ function isMobile(){ return window.innerWidth <= 768 }
 function switchView(view){
   currentView = view;
   const isDash = view === 'dashboard';
+  // Desktop tabs
+  tabDashboard.classList.toggle('active', isDash);
+  tabCalendar.classList.toggle('active', view === 'calendar');
+  tabHeatmap.classList.toggle('active', view === 'heatmap');
   btnDashboard.classList.toggle('active', isDash);
-  // Show the correct view
+  // Toggle sub-views inside overviewWrapper
   dashboardViewEl.style.display = isDash ? 'flex' : 'none';
   todayViewEl.style.display = view === 'today' ? 'flex' : 'none';
+  calendarView.style.display = view === 'calendar' ? '' : 'none';
+  heatmapViewEl.style.display = view === 'heatmap' ? 'flex' : 'none';
   document.getElementById('dayDetail').classList.remove('show');
   ovSelectedDate = null;
   // Mobile bottom nav
   document.querySelectorAll('.bnav-tab').forEach(t => t.classList.remove('active'));
-  const bnavMap = { dashboard:'bnavDashboard', today:'bnavNotes' };
+  const bnavMap = { dashboard:'bnavDashboard', calendar:'bnavCalendar', heatmap:'bnavHeatmap' };
   const bnavEl = document.getElementById(bnavMap[view]);
   if(bnavEl) bnavEl.classList.add('active');
   // Close bottom sheet
@@ -1279,8 +1344,10 @@ function switchView(view){
     renderSidebar();
   }
   // Render
-  if(isDash) renderDashboard();
+  if(view === 'dashboard') renderDashboard();
   if(view === 'today') renderTodayView();
+  if(view === 'calendar') renderOverviewCalendar();
+  if(view === 'heatmap') renderHeatmap();
 }
 
 // Sidebar dashboard button
@@ -1289,18 +1356,176 @@ btnDashboard.onclick = () => {
   sidebar.classList.remove('open');
   overlay.classList.remove('show');
 };
+tabDashboard.onclick = () => switchView('dashboard');
+tabCalendar.onclick = () => switchView('calendar');
+tabHeatmap.onclick = () => switchView('heatmap');
 
 // --- Bottom Nav ---
 document.getElementById('bnavDashboard').onclick = () => switchView('dashboard');
-document.getElementById('bnavNotes').onclick = () => switchView('today');
+document.getElementById('bnavCalendar').onclick = () => switchView('calendar');
+document.getElementById('bnavHeatmap').onclick = () => switchView('heatmap');
 
-// --- Dashboard (consolidated view: stats + calendar + heatmap) ---
+// --- Dashboard Matrix ---
+let dashYear, dashMonth;
+const dashTooltip = document.getElementById('dashTooltip');
+
+function initDashMonth(){
+  const now = new Date();
+  if(dashYear == null){ dashYear = now.getFullYear(); dashMonth = now.getMonth() }
+}
+
 function renderDashboard(){
+  initDashMonth();
   syncHabitDataFromHabits();
   renderGlobalStats();
-  renderOverviewCalendar();
-  renderHeatmap();
+  // Copy stats into dashboard's own stats container
+  const data = loadHabitData();
+  const activeHabits = habits.filter(h => !h.archived && !h.paused);
+  const daysInMonth = new Date(dashYear, dashMonth + 1, 0).getDate();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayDay = (today.getFullYear() === dashYear && today.getMonth() === dashMonth) ? today.getDate() : -1;
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('dashTitle').textContent = monthNames[dashMonth] + ' ' + dashYear;
+
+  const grid = document.getElementById('dashGrid');
+  grid.innerHTML = '';
+
+  if(activeHabits.length === 0){
+    grid.style.gridTemplateColumns = '1fr';
+    grid.style.gridTemplateRows = 'auto';
+    const empty = document.createElement('div');
+    empty.className = 'dash-empty';
+    empty.textContent = 'Add your first habit to see the dashboard matrix.';
+    grid.appendChild(empty);
+    return;
+  }
+
+  const cellH = isMobile() ? 28 : 32;
+  const labelW = isMobile() ? 100 : 130;
+  const monthW = isMobile() ? 52 : 64;
+  grid.style.gridTemplateColumns = labelW + 'px repeat(' + daysInMonth + ',' + cellH + 'px) ' + monthW + 'px';
+  grid.style.gridTemplateRows = 'repeat(' + (activeHabits.length + 2) + ',' + cellH + 'px)';
+
+  // Header row: corner + day numbers + monthly corner
+  const corner = document.createElement('div');
+  corner.className = 'dash-cell dash-habit-label header-corner dash-header';
+  corner.textContent = 'Habit';
+  grid.appendChild(corner);
+  for(let d = 1; d <= daysInMonth; d++){
+    const hdr = document.createElement('div');
+    hdr.className = 'dash-cell dash-header' + (d === todayDay ? ' today-col' : '');
+    hdr.textContent = d;
+    grid.appendChild(hdr);
+  }
+  const mCorner = document.createElement('div');
+  mCorner.className = 'dash-cell dash-monthly header-corner dash-header';
+  mCorner.textContent = 'Month';
+  grid.appendChild(mCorner);
+
+  // Habit rows
+  activeHabits.forEach(h => {
+    // Label cell
+    const label = document.createElement('div');
+    label.className = 'dash-cell dash-habit-label';
+    label.innerHTML = '<span class="dash-habit-dot" style="background:' + h.color + '"></span>' + esc(h.name);
+    grid.appendChild(label);
+
+    let habitDone = 0, habitTotal = 0;
+    // Day cells
+    for(let d = 1; d <= daysInMonth; d++){
+      const date = new Date(dashYear, dashMonth, d);
+      const key = dateKey(date);
+      const isFuture = date > today;
+      const comps = data.completions[key] || {};
+      const done = !!comps[h.id];
+      const scheduled = isHabitScheduled(h, date);
+      if(!isFuture && scheduled){ habitTotal++; if(done) habitDone++ }
+
+      const cell = document.createElement('div');
+      cell.className = 'dash-cell dash-day-cell' + (isFuture ? ' future' : '') + (d === todayDay ? ' today-col' : '');
+      const circle = document.createElement('div');
+      circle.className = 'dash-circle';
+      if(done){
+        circle.classList.add('filled');
+        circle.style.background = h.color;
+      }
+      cell.appendChild(circle);
+
+      if(!isFuture){
+        cell.onclick = () => {
+          const curData = loadHabitData();
+          const curComps = curData.completions[key] || {};
+          const newDone = !curComps[h.id];
+          setCompletionForDate(key, h.id, newDone);
+          if(newDone) circle.classList.add('anim');
+          renderDashboard();
+          updateStatus();
+          checkReminder();
+        };
+        cell.onmouseenter = (e) => showDashTooltip(e, h.name, date, done);
+        cell.onmouseleave = () => hideDashTooltip();
+      }
+      grid.appendChild(cell);
+    }
+
+    // Monthly score
+    const mCell = document.createElement('div');
+    mCell.className = 'dash-cell dash-monthly';
+    const pct = habitTotal > 0 ? Math.round(habitDone / habitTotal * 100) : 0;
+    mCell.innerHTML = '<span class="dash-monthly-pct">' + pct + '%</span><div class="dash-monthly-bar"><div class="dash-monthly-fill" style="width:' + pct + '%;background:' + h.color + '"></div></div>';
+    grid.appendChild(mCell);
+  });
+
+  // Bottom score row
+  const sLabel = document.createElement('div');
+  sLabel.className = 'dash-cell dash-habit-label dash-score-cell';
+  sLabel.textContent = 'Score';
+  sLabel.style.fontWeight = '600';
+  grid.appendChild(sLabel);
+  let totalAllDone = 0, totalAllPossible = 0;
+  for(let d = 1; d <= daysInMonth; d++){
+    const date = new Date(dashYear, dashMonth, d);
+    const key = dateKey(date);
+    const isFuture = date > today;
+    const comps = data.completions[key] || {};
+    const scheduled = activeHabits.filter(h => isHabitScheduled(h, date));
+    let dayDone = 0;
+    scheduled.forEach(h => { if(comps[h.id]) dayDone++ });
+    if(!isFuture){ totalAllDone += dayDone; totalAllPossible += scheduled.length }
+    const sCell = document.createElement('div');
+    sCell.className = 'dash-cell dash-score-cell' + (d === todayDay ? ' today-col' : '');
+    sCell.textContent = isFuture ? '' : (scheduled.length > 0 ? dayDone + '/' + scheduled.length : '');
+    grid.appendChild(sCell);
+  }
+  const totalCell = document.createElement('div');
+  totalCell.className = 'dash-cell dash-monthly dash-score-cell';
+  const totalPct = totalAllPossible > 0 ? Math.round(totalAllDone / totalAllPossible * 100) : 0;
+  totalCell.innerHTML = '<span class="dash-monthly-pct">' + totalPct + '%</span>';
+  grid.appendChild(totalCell);
+
+  // Scroll to today column
+  if(todayDay > 0){
+    const scrollEl = document.getElementById('dashScroll');
+    const labelW = isMobile() ? 100 : 130;
+    const scrollTo = labelW + (todayDay - 1) * cellH - scrollEl.clientWidth / 2 + cellH / 2;
+    if(scrollTo > 0) scrollEl.scrollLeft = scrollTo;
+  }
 }
+
+function showDashTooltip(e, name, date, done){
+  const tip = dashTooltip;
+  const dateStr = date.toLocaleDateString('default', { month:'long', day:'numeric' });
+  tip.textContent = name + ' — ' + dateStr + ' ' + (done ? '✓' : '✗');
+  tip.classList.add('show');
+  const rect = e.currentTarget.getBoundingClientRect();
+  tip.style.left = (rect.left + rect.width/2 - tip.offsetWidth/2) + 'px';
+  tip.style.top = (rect.top - tip.offsetHeight - 6) + 'px';
+}
+function hideDashTooltip(){ dashTooltip.classList.remove('show') }
+
+document.getElementById('dashPrev').onclick = () => { dashMonth--; if(dashMonth<0){dashMonth=11;dashYear--} renderDashboard() };
+document.getElementById('dashNext').onclick = () => { dashMonth++; if(dashMonth>11){dashMonth=0;dashYear++} renderDashboard() };
+document.getElementById('dashTodayBtn').onclick = () => { const n=new Date(); dashYear=n.getFullYear(); dashMonth=n.getMonth(); renderDashboard() };
 
 // --- Today View ---
 function renderTodayView(){
@@ -1392,7 +1617,9 @@ function renderBsHabitList(dateStr){
       renderBsHabitList(dateStr);
       renderBsHabitStats(dateStr);
       if(currentView === 'dashboard') renderDashboard();
-      else renderTodayView();
+      else if(currentView === 'calendar') renderOverviewCalendar();
+      else if(currentView === 'heatmap') renderHeatmap();
+      else if(currentView === 'today') renderTodayView();
       updateStatus();
       checkReminder();
     };
@@ -1613,21 +1840,17 @@ function hideHmTooltip(){
 // --- Detail View ---
 function renderDetail(){
   const detail = document.getElementById('habitDetail');
+  const wrapper = document.getElementById('overviewWrapper');
   const h = habits.find(x => x.id === selectedId);
   if(!h){
     detail.classList.remove('show');
     if(checkEmptyState()) return;
-    // Show the current view
-    dashboardViewEl.style.display = currentView === 'dashboard' ? 'flex' : 'none';
-    todayViewEl.style.display = currentView === 'today' ? 'flex' : 'none';
-    if(currentView === 'dashboard') renderDashboard();
-    else if(currentView === 'today') renderTodayView();
+    wrapper.style.display = '';
+    switchView(currentView);
     return;
   }
   document.getElementById('emptyState').style.display = 'none';
-  dashboardViewEl.style.display = 'none';
-  todayViewEl.style.display = 'none';
-  btnDashboard.classList.remove('active');
+  wrapper.style.display = 'none';
   detail.classList.add('show');
   document.getElementById('detailDot').style.background = h.color;
   document.getElementById('detailName').textContent = h.name;
@@ -1999,7 +2222,8 @@ document.getElementById('importFileInput').onchange = (e) => {
       renderSidebar();
       renderDetail();
       if(currentView === 'today') renderTodayView();
-      else renderDashboard();
+      else if(currentView === 'calendar') renderOverviewCalendar();
+      else renderHeatmap();
       alert('Data imported successfully!');
     } catch(err){
       alert('Invalid file. Please select a valid habit tracker JSON backup.');
@@ -2083,11 +2307,11 @@ function clearReminderIndicator(){
 function checkEmptyState(){
   const activeHabits = habits.filter(h => !h.archived);
   const emptyState = document.getElementById('emptyState');
+  const wrapper = document.getElementById('overviewWrapper');
   const detail = document.getElementById('habitDetail');
   if(activeHabits.length === 0 && !selectedId){
     emptyState.style.display = '';
-    dashboardViewEl.style.display = 'none';
-    todayViewEl.style.display = 'none';
+    wrapper.style.display = 'none';
     detail.classList.remove('show');
     return true;
   }
@@ -2099,8 +2323,10 @@ function checkEmptyState(){
 load();
 syncHabitDataFromHabits();
 initOverviewCalendar();
+initDashMonth();
 todayViewEl.style.display = 'none';
-dashboardViewEl.style.display = 'none';
+heatmapViewEl.style.display = 'none';
+calendarView.style.display = 'none';
 renderSidebar();
 switchView('dashboard');
 renderDetail();
